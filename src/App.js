@@ -22,7 +22,7 @@ function App() {
   const [patientName, setPatientName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [viewMode, setViewMode] = useState('cards'); // 'cards' ou 'text'
+  const [viewMode, setViewMode] = useState('cards'); 
   const [apiStatus, setApiStatus] = useState(null);
   const textAreaRef = useRef(null);
 
