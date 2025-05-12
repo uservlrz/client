@@ -1,3 +1,5 @@
+/* App.css - Com estilos integrados para o indicador de status da API */
+
 .patient-input-container {
   margin-bottom: 20px;
   width: 100%;
@@ -489,8 +491,84 @@ footer {
   box-sizing: border-box;
 }
 
+/* Estilos para o indicador de status da API - NOVO */
+.api-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  margin: 10px 0 0;
+  max-width: 200px;
+  transition: all 0.3s ease;
+}
+
+.api-status.online {
+  background-color: #e6f4ea;
+  color: #137333;
+  border: 1px solid #ceead6;
+}
+
+.api-status.offline,
+.api-status.error {
+  background-color: #fce8e6;
+  color: #c5221f;
+  border: 1px solid #f6cbc7;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.online .status-indicator {
+  background-color: #34a853;
+  animation: pulse-green 2s infinite;
+}
+
+.offline .status-indicator,
+.error .status-indicator {
+  background-color: #ea4335;
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba(52, 168, 83, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(52, 168, 83, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 168, 83, 0);
+  }
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(234, 67, 53, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(234, 67, 53, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(234, 67, 53, 0);
+  }
+}
+
+/* Informações da API no rodapé */
+.api-info {
+  font-size: 0.75rem;
+  color: #8f8f8f;
+  margin: 5px 0 0;
+  font-style: italic;
+}
+
 @media print {
-  .uploader-container, .export-container, footer, .App-header .subtitle, .view-mode-toggle {
+  .uploader-container, .export-container, footer, .App-header .subtitle, .view-mode-toggle, .api-status, .api-info {
     display: none;
   }
   
@@ -599,5 +677,10 @@ footer {
   
   .patient-input-container {
     width: 90%;
+  }
+  
+  .api-status {
+    font-size: 0.8rem;
+    padding: 4px 8px;
   }
 }
