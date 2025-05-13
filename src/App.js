@@ -1,5 +1,19 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
+
+// Função para determinar a URL da API baseada no ambiente
+function getApiUrl() {
+  // Em desenvolvimento (local), usa localhost
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000';
+  }
+  
+  // Em produção, usa o domínio do Vercel para o backend
+  return 'https://server-theta-murex.vercel.app';
+}
+
+// URL da API - detecta automaticamente ambiente local ou produção
+const API_URL = getApiUrl();
 
 function App() {
   const [file, setFile] = useState(null);
@@ -8,7 +22,42 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('cards'); // 'cards' ou 'text'
+  const [apiStatus, setApiStatus] = useState(null);
   const textAreaRef = useRef(null);
+
+  // Verificar status da API ao carregar
+  useEffect(() => {
+    const checkApiStatus = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/health`);
+        if (response.ok) {
+          const data = await response.json();
+          setApiStatus({
+            status: 'online',
+            env: data.env,
+            url: API_URL
+          });
+          console.log(`API conectada: ${API_URL} (${data.env})`);
+        } else {
+          setApiStatus({
+            status: 'error',
+            message: `Erro ao conectar com a API: ${response.status}`,
+            url: API_URL
+          });
+        }
+      } catch (error) {
+        setApiStatus({
+          status: 'offline',
+          message: 'Não foi possível conectar ao servidor',
+          error: error.message,
+          url: API_URL
+        });
+        console.error('Erro ao verificar status da API:', error);
+      }
+    };
+
+    checkApiStatus();
+  }, []);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -35,13 +84,15 @@ function App() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/upload', {
+      console.log(`Enviando arquivo para ${API_URL}/api/upload`);
+      const response = await fetch(`${API_URL}/api/upload`, {
         method: 'POST',
         body: formData,
       });
       
       if (!response.ok) {
-        throw new Error('Erro ao processar o documento');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Erro ${response.status}: ${response.statusText}`);
       }
       
       const data = await response.json();
@@ -169,6 +220,18 @@ function App() {
         </div>
         <h1>Extrator de Resultados de Exames</h1>
         <p className="subtitle">Sistema interno para processamento de laudos laboratoriais</p>
+        
+        {/* Indicador de status da API */}
+        {apiStatus && (
+          <div className={`api-status ${apiStatus.status}`}>
+            <span className="status-indicator"></span>
+            {apiStatus.status === 'online' ? (
+              <span>API conectada ({apiStatus.env})</span>
+            ) : (
+              <span>Erro de conexão: {apiStatus.message}</span>
+            )}
+          </div>
+        )}
       </header>
       <main>
         <div className="uploader-container">
@@ -187,7 +250,7 @@ function App() {
             <button 
               type="submit" 
               className="upload-button"
-              disabled={!file}
+              disabled={!file || apiStatus?.status !== 'online'}
             >
               Extrair Resultados
             </button>
@@ -270,6 +333,7 @@ function App() {
       </main>
       <footer>
         <p>© 2025 - Instituto Paulo Godoi - Sistema de Processamento de Exames</p>
+        <p className="api-info">Ambiente: {apiStatus?.env || 'Desconectado'} | API: {API_URL}</p>
       </footer>
     </div>
   );
