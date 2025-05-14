@@ -1,38 +1,4 @@
-/* App.css - Com estilos integrados para o indicador de status da API */
-
-.patient-input-container {
-  margin-bottom: 20px;
-  width: 100%;
-  max-width: 500px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.patient-input-container label {
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #1a73e8;
-}
-
-.patient-name-input {
-  width: 100%;
-  padding: 12px 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.patient-name-input:focus {
-  outline: none;
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
-}
-
-.patient-name-input::placeholder {
-  color: #aaa;
-}
+/* App.css - Com estilos otimizados para a visualização simplificada */
 
 body, html {
   margin: 0;
@@ -44,7 +10,7 @@ body, html {
 }
 
 .App {
-  max-width: 1200px;
+  max-width: 1000px; /* Reduzido levemente para foco na área de texto */
   width: 100%;
   margin: 20px auto;
   padding: 30px;
@@ -158,7 +124,7 @@ input[type="file"] {
   transform: translateY(-2px);
 }
 
-.upload-button, .export-button, .copy-button {
+.upload-button, .export-button, .copy-button, .reset-button {
   padding: 12px 28px;
   background-color: #1a73e8; /* Azul */
   color: white;
@@ -174,7 +140,7 @@ input[type="file"] {
   box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3);
 }
 
-.upload-button:hover, .export-button:hover, .copy-button:hover {
+.upload-button:hover, .export-button:hover, .copy-button:hover, .reset-button:hover {
   background-color: #4285f4; /* Azul mais claro no hover */
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(26, 115, 232, 0.4);
@@ -185,19 +151,30 @@ input[type="file"] {
   margin-top: 25px;
 }
 
-.export-button:hover {
-  background-color: #5c9aff; /* Azul ainda mais claro */
-}
-
 .copy-button {
   background-color: #3367d6; /* Azul escuro */
   color: white;
   margin-top: 15px;
   align-self: center;
+  min-width: 280px; /* Melhor tamanho para o texto */
 }
 
 .copy-button:hover {
   background-color: #4285f4; /* Azul mais claro */
+}
+
+.reset-button {
+  background-color: #34a853; /* Verde Google */
+  margin: 20px 0;
+}
+
+.reset-button:hover {
+  background-color: #46b965;
+}
+
+.reset-button-container {
+  text-align: center;
+  margin: 20px 0;
 }
 
 .print-icon, .copy-icon {
@@ -205,9 +182,8 @@ input[type="file"] {
   font-size: 18px;
 }
 
-.export-container {
-  text-align: center;
-  margin-top: 40px;
+.copy-icon {
+  font-weight: normal;
 }
 
 .upload-button:disabled {
@@ -268,177 +244,32 @@ input[type="file"] {
   border: 1px dashed #dee2e6;
 }
 
-.summary-container h2 {
-  color: #1a73e8; /* Azul */
-  margin-bottom: 30px;
-  text-align: center;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #e8f0fe; /* Azul muito claro */
-  font-size: 1.8rem;
-}
-
-.summaries-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
-  gap: 30px;
-}
-
-.summary-card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.07);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 1px solid #eaeaea;
-}
-
-.summary-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.card-header {
-  background-color: #1a73e8; /* Azul */
-  padding: 15px 20px;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-}
-
-.card-header h3 {
-  margin: 0;
-  color: white;
-  font-size: 1.3rem;
-  text-align: center;
-}
-
-.summary-content {
-  padding: 25px 20px;
-  color: #212529;
-  line-height: 1.6;
-}
-
-.section-title {
-  background: linear-gradient(to right, #1a73e8, #4285f4); /* Gradiente azul */
-  color: white;
-  padding: 10px 15px;
-  margin: 25px 0 15px 0;
-  border-radius: 6px;
-  font-size: 18px;
-  text-align: center;
-  font-weight: 800; /* Extra bold for section titles */
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.2);
-}
-
-.section-header {
-  margin-top: 30px;
-  margin-bottom: 20px;
-}
-
-.result-line {
-  margin: 12px 0;
-  padding: 12px 15px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s ease;
-  border-left: 3px solid #1a73e8; /* Azul */
-}
-
-.result-line:hover {
-  transform: translateX(3px);
-  background-color: #f2f7ff; /* Azul muito claro */
-}
-
-.exam-result {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.exam-name {
-  font-weight: 800; /* Extra bold (black) for all exam names */
-  margin-right: 5px;
-  color: #34495e;
-  min-width: 140px;
-  font-size: 1.05rem;
-}
-
-.exam-value {
-  font-weight: 600;
-  color: #1a73e8; /* Azul */
-  margin-right: 10px;
-  font-size: 1.05rem;
-}
-
-.dual-value {
-  display: flex;
-  align-items: center;
-}
-
-.percent-value {
-  color: #4285f4; /* Azul mais claro */
-  font-weight: 600;
-}
-
-.divider {
-  margin: 0 5px;
-  color: #666;
-}
-
-.absolute-value {
-  color: #3367d6; /* Azul escuro */
-  font-weight: 600;
-}
-
-.exam-reference {
-  color: #717171;
-  margin-left: auto;
-  font-size: 0.9em;
-  background-color: #f2f7ff; /* Azul muito claro */
-  padding: 3px 8px;
-  border-radius: 4px;
-}
-
-/* Estilos para a visualização de texto para cópia */
-.view-mode-toggle {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-  gap: 15px;
-}
-
-.toggle-button {
-  padding: 10px 20px;
-  background-color: #f2f2f2;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  color: #555;
-}
-
-.toggle-button.active {
-  background-color: #1a73e8; /* Azul */
-  color: white;
-  box-shadow: 0 2px 5px rgba(26, 115, 232, 0.3);
-}
-
-.toggle-button:hover:not(.active) {
-  background-color: #e0e0e0;
-}
-
+/* Estilos para a nova visualização simplificada de texto */
 .text-view-container {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.text-view-container h2 {
+  color: #1a73e8;
+  margin-bottom: 20px;
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e8f0fe;
+  width: 100%;
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .copy-instructions {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   color: #666;
+  font-size: 0.95rem;
 }
 
 .text-area-container {
@@ -451,20 +282,23 @@ input[type="file"] {
 .results-text-area {
   width: 100%;
   height: 400px;
-  padding: 15px;
+  padding: 20px;
   border: 1px solid #ddd;
   border-radius: 8px;
   font-family: 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.6;
-  background-color: #f9f9f9;
+  background-color: #f9f9fa;
   resize: vertical;
   white-space: pre-wrap;
+  margin-bottom: 20px;
+  color: #333;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .results-text-area:focus {
   outline: none;
-  border-color: #1a73e8; /* Azul */
+  border-color: #1a73e8;
   box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
 }
 
@@ -477,8 +311,10 @@ footer {
   border-top: 1px solid #e8f0fe; /* Azul muito claro */
 }
 
-.contact-info {
-  margin-top: 10px;
+.api-info {
+  font-size: 0.75rem;
+  color: #8f8f8f;
+  margin: 5px 0 0;
   font-style: italic;
 }
 
@@ -491,14 +327,14 @@ footer {
   box-sizing: border-box;
 }
 
-/* Estilos para o indicador de status da API - NOVO */
+/* Estilos para o indicador de status da API */
 .api-status {
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 0.9rem;
-  margin: 10px 0 0;
+  margin: 10px auto 0;
   max-width: 200px;
   transition: all 0.3s ease;
 }
@@ -514,6 +350,13 @@ footer {
   background-color: #fce8e6;
   color: #c5221f;
   border: 1px solid #f6cbc7;
+}
+
+.api-status.checking {
+  background-color: #e8f0fe;
+  color: #1a73e8;
+  border: 1px solid #cfe8ff;
+  animation: pulse-blue 2s infinite;
 }
 
 .status-indicator {
@@ -533,6 +376,169 @@ footer {
 .error .status-indicator {
   background-color: #ea4335;
   animation: pulse-red 2s infinite;
+}
+
+.checking .status-indicator {
+  background-color: #1a73e8;
+  animation: pulse-blue 2s infinite;
+}
+
+/* Botão de reconexão para a API */
+.retry-button {
+  margin-left: 8px;
+  background-color: #c5221f;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 3px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(197, 34, 31, 0.3);
+}
+
+.retry-button:hover {
+  background-color: #ea4335;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 7px rgba(197, 34, 31, 0.4);
+}
+
+/* Barra de progresso para upload e processamento */
+.progress-bar-container {
+  margin: 20px auto;
+  width: 100%;
+  max-width: 500px;
+  padding: 0 20px;
+}
+
+.progress-bar {
+  height: 6px;
+  background-color: #e8f0fe;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar .progress-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(to right, #1a73e8, #4285f4);
+  animation: progress-animation 2s infinite;
+  width: 30%;
+}
+
+.progress-bar.upload .progress-indicator {
+  animation-duration: 2s;
+}
+
+.progress-bar.processing .progress-indicator {
+  animation-duration: 3s;
+  background: linear-gradient(to right, #4285f4, #1a73e8);
+}
+
+.progress-status {
+  text-align: center;
+  font-size: 14px;
+  color: #1a73e8;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+@keyframes progress-animation {
+  0% {
+    left: -30%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Status de upload - otimizado */
+.upload-status {
+  margin: 20px auto;
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  max-width: 500px;
+}
+
+.upload-status.iniciando,
+.upload-status.enviando,
+.upload-status.processando {
+  background-color: #e8f0fe;
+  color: #1a73e8;
+  border: 1px solid #cfe8ff;
+}
+
+.upload-status.sucesso {
+  background-color: #e6f4ea;
+  color: #137333;
+  border: 1px solid #ceead6;
+}
+
+.upload-status.aviso {
+  background-color: #fef7e0;
+  color: #b06000;
+  border: 1px solid #feefc3;
+}
+
+.upload-status.erro {
+  background-color: #fce8e6;
+  color: #c5221f;
+  border: 1px solid #f6cbc7;
+}
+
+.status-icon {
+  margin-right: 15px;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.upload-status.sucesso .status-icon {
+  background-color: #e6f4ea;
+  color: #34a853;
+}
+
+.upload-status.aviso .status-icon {
+  background-color: #fef7e0;
+  color: #f9ab00;
+}
+
+.upload-status.erro .status-icon {
+  background-color: #fce8e6;
+  color: #ea4335;
+}
+
+.upload-status.iniciando .status-icon,
+.upload-status.enviando .status-icon,
+.upload-status.processando .status-icon {
+  background-color: #e8f0fe;
+  color: #1a73e8;
+}
+
+.status-message {
+  flex: 1;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* Animação para status em progresso */
+@keyframes pulse-status {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
 }
 
 @keyframes pulse-green {
@@ -559,16 +565,171 @@ footer {
   }
 }
 
-/* Informações da API no rodapé */
-.api-info {
-  font-size: 0.75rem;
-  color: #8f8f8f;
-  margin: 5px 0 0;
-  font-style: italic;
+@keyframes pulse-blue {
+  0% {
+    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(26, 115, 232, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0);
+  }
 }
 
+.upload-status.iniciando,
+.upload-status.enviando,
+.upload-status.processando {
+  animation: pulse-status 1.5s infinite;
+}
+
+/* Dicas para PDFs problemáticos */
+.pdf-tips {
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-left: 4px solid #ea4335;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  max-width: 500px;
+}
+
+.pdf-tips h4 {
+  margin-top: 0;
+  color: #c5221f;
+  font-size: 16px;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.pdf-tips ul {
+  margin: 10px 0 0;
+  padding-left: 20px;
+}
+
+.pdf-tips li {
+  margin-bottom: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #5f6368;
+}
+
+/* Aviso quando o documento foi processado com ajustes */
+.processing-notice {
+  margin: 20px auto;
+  padding: 18px;
+  background-color: #fef7e0;
+  border-radius: 8px;
+  border-left: 4px solid #f9ab00;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  max-width: 500px;
+}
+
+.processing-notice p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #b06000;
+  line-height: 1.5;
+}
+
+/* Estilos para o componente ErrorHandler */
+.error-container {
+  margin: 20px auto;
+  border-radius: 12px;
+  background-color: #fff5f5;
+  border: 1px solid #ffd7d7;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  max-width: 600px;
+}
+
+.error-icon {
+  font-size: 24px;
+  margin-right: 15px;
+  background: linear-gradient(to right bottom, #ff5252, #ea4335);
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 10px rgba(234, 67, 53, 0.3);
+}
+
+.error-content {
+  flex: 1;
+}
+
+.error-title {
+  margin: 0 0 10px 0;
+  color: #c5221f;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.error-message {
+  margin: 0 0 15px 0;
+  color: #5f6368;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.error-help {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-left: 3px solid #ea4335;
+}
+
+.error-help h4 {
+  margin: 0 0 10px 0;
+  font-size: 15px;
+  color: #3c4043;
+  font-weight: 600;
+}
+
+.error-help ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.error-help li {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #5f6368;
+  line-height: 1.4;
+}
+
+.error-retry-button {
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3);
+}
+
+.error-retry-button:hover {
+  background-color: #4285f4;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(26, 115, 232, 0.4);
+}
+
+/* Estilos para impressão */
 @media print {
-  .uploader-container, .export-container, footer, .App-header .subtitle, .view-mode-toggle, .api-status, .api-info {
+  .uploader-container, .export-container, footer, .App-header .subtitle, 
+  .view-mode-toggle, .api-status, .api-info, .copy-button, .reset-button-container,
+  .progress-bar-container, .upload-status, .pdf-tips, .processing-notice, 
+  .error-container, .copy-instructions {
     display: none;
   }
   
@@ -578,37 +739,29 @@ footer {
     padding-bottom: 0;
   }
   
-  .summary-container, .summary-card {
+  .summary-container {
     box-shadow: none;
     padding: 0;
     border: none;
   }
   
-  .result-line {
+  .App {
     box-shadow: none;
-    border-bottom: 1px solid #eee;
-    border-left: none;
-    padding: 8px 0;
+    background-color: #fff;
+    padding: 0;
+    margin: 0;
   }
-
-  .section-title {
-    background: #f0f0f0;
-    color: #333;
+  
+  .results-text-area {
+    border: none;
+    height: auto;
     box-shadow: none;
+    padding: 0;
   }
   
-  .card-header {
-    background-color: #f0f0f0;
-    color: #333;
-  }
-  
-  .card-header h3 {
-    color: #333;
-  }
-  
-  .exam-name {
-    font-weight: 800;
+  .text-view-container h2 {
     color: #000;
+    border-bottom: 1px solid #000;
   }
   
   .logo-text {
@@ -618,69 +771,74 @@ footer {
   .logo-text::after {
     background-color: #000;
   }
-  
-  .App {
-    box-shadow: none;
-    background-color: #fff;
-  }
 }
 
+/* Responsividade */
 @media (max-width: 768px) {
-  .summaries-list {
-    grid-template-columns: 1fr;
-  }
-  
-  .file-label {
-    font-size: 14px;
-  }
-  
-  .summary-card {
+  .App {
+    margin: 10px;
     padding: 15px;
-  }
-  
-  .exam-result {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .exam-reference {
-    display: block;
-    width: 100%;
-    margin-top: 5px;
-    margin-left: 0;
-  }
-
-  .exam-name {
-    min-width: auto;
-    margin-bottom: 5px;
-  }
-  
-  .view-mode-toggle {
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .toggle-button {
-    width: 100%;
-    max-width: 300px;
   }
   
   .logo-text {
     font-size: 1.8rem;
   }
   
-  .App {
-    margin: 10px;
+  .file-label {
+    font-size: 14px;
+  }
+  
+  .error-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
     padding: 15px;
   }
   
-  .patient-input-container {
-    width: 90%;
+  .error-icon {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+  
+  .error-help ul {
+    text-align: left;
+  }
+  
+  .upload-status {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .status-icon {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  
+  .progress-bar-container {
+    padding: 0 5px;
+  }
+  
+  .results-text-area {
+    padding: 15px;
+    font-size: 13px;
+  }
+  
+  .copy-button {
+    min-width: 80%;
+    padding: 10px 15px;
+    font-size: 14px;
   }
   
   .api-status {
     font-size: 0.8rem;
     padding: 4px 8px;
+  }
+  
+  .text-view-container h2 {
+    font-size: 1.3rem;
+  }
+  
+  main {
+    padding: 20px 15px;
   }
 }

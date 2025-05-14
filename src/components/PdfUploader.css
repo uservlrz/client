@@ -1,59 +1,245 @@
+/* client/src/components/PdfUploader.css */
 .uploader-container {
-    margin-bottom: 30px;
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.file-input-container {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.file-label {
+  display: block;
+  width: 100%;
+  padding: 12px 15px;
+  background-color: #e9ecef;
+  border: 2px dashed #ced4da;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 500;
+  color: #495057;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-label:hover {
+  background-color: #dee2e6;
+  border-color: #adb5bd;
+}
+
+.upload-button {
+  display: block;
+  width: 100%;
+  padding: 12px 0;
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.upload-button:hover {
+  background-color: #0056b3;
+}
+
+.upload-button:disabled {
+  background-color: #adb5bd;
+  cursor: not-allowed;
+}
+
+/* Barra de progresso */
+.progress-bar-container {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.progress-bar {
+  height: 6px;
+  background-color: #e9ecef;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar .progress-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 3px;
+  background-color: #0066cc;
+  animation: progress-animation 2s infinite;
+  width: 30%;
+}
+
+.progress-bar.upload .progress-indicator {
+  animation-duration: 2s;
+}
+
+.progress-bar.processing .progress-indicator {
+  animation-duration: 3s;
+  background-color: #17a2b8;
+}
+
+.progress-status {
+  text-align: center;
+  font-size: 14px;
+  color: #6c757d;
+  margin-top: 5px;
+}
+
+@keyframes progress-animation {
+  0% {
+    left: -30%;
   }
-  
-  form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  100% {
+    left: 100%;
   }
-  
-  .file-input-container {
-    margin-bottom: 15px;
-    width: 100%;
-  }
-  
-  input[type="file"] {
-    display: none;
-  }
-  
-  .file-label {
-    display: block;
-    width: 100%;
-    padding: 12px;
-    text-align: center;
-    background-color: #e9ecef;
-    border: 2px dashed #ced4da;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .file-label:hover {
-    background-color: #dee2e6;
-    border-color: #adb5bd;
+}
+
+/* Status de upload */
+.upload-status {
+  margin-top: 15px;
+  padding: 12px 15px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.upload-status.iniciando,
+.upload-status.enviando,
+.upload-status.processando {
+  background-color: #cfe8ff;
+  color: #0066cc;
+}
+
+.upload-status.sucesso {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.upload-status.aviso {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.upload-status.erro {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-icon {
+  margin-right: 10px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-message {
+  flex: 1;
+}
+
+/* Dicas para PDFs problemáticos */
+.pdf-tips {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-left: 4px solid #dc3545;
+  border-radius: 4px;
+}
+
+.pdf-tips h4 {
+  margin-top: 0;
+  color: #721c24;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.pdf-tips ul {
+  margin: 10px 0 0;
+  padding-left: 20px;
+}
+
+.pdf-tips li {
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #495057;
+}
+
+/* Aviso quando o documento foi processado com ajustes */
+.processing-notice {
+  margin-top: 15px;
+  padding: 12px 15px;
+  background-color: #fff8e1;
+  border-radius: 6px;
+  border-left: 4px solid #ffc107;
+}
+
+.processing-notice p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #5d4037;
+}
+
+/* Animação para status em progresso */
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.upload-status.iniciando,
+.upload-status.enviando,
+.upload-status.processando {
+  animation: pulse 1.5s infinite;
+}
+
+/* Medias queries para responsividade */
+@media (max-width: 768px) {
+  .uploader-container {
+    padding: 15px;
   }
   
   .upload-button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
+    padding: 10px 0;
   }
   
-  .upload-button:hover {
-    background-color: #0069d9;
+  .file-label {
+    padding: 10px;
+  }
+}
+
+/* Estilos para o modo escuro (se suportado pelo seu app) */
+@media (prefers-color-scheme: dark) {
+  .uploader-container {
+    background-color: #2d3436;
+    color: #f1f1f1;
   }
   
-  .upload-button:disabled {
-    background-color: #6c757d;
-    cursor: not-allowed;
+  .file-label {
+    background-color: #3d4246;
+    border-color: #576574;
+    color: #f1f1f1;
   }
+  
+  .file-label:hover {
+    background-color: #4b5563;
+    border-color: #6c7a89;
+  }
+}
