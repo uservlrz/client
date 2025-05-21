@@ -1,4 +1,4 @@
-/* App.css - Com estilos otimizados para a visualização simplificada */
+/* App.css - Com estilos otimizados para a visualização simplificada e suporte a múltiplos arquivos */
 
 body, html {
   margin: 0;
@@ -86,6 +86,12 @@ main {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   text-align: center;
   border: 2px dashed #ccc;
+  transition: all 0.3s ease;
+}
+
+.uploader-container:hover {
+  border-color: #1a73e8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 form {
@@ -104,29 +110,49 @@ input[type="file"] {
   display: none;
 }
 
+/* Estilo melhorado para o label do input de arquivo */
 .file-label {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  padding: 15px;
+  padding: 16px;
   text-align: center;
-  background-color: #f2f7ff; /* Azul claro */
-  border: 2px dashed #1a73e8; /* Azul */
-  border-radius: 8px;
+  background: linear-gradient(to bottom, #f9fbff, #f2f7ff);
+  border: 2px dashed #1a73e8;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 16px;
-  color: #1a73e8; /* Azul */
+  color: #1a73e8;
   font-weight: 500;
+  position: relative;
+  overflow: hidden;
 }
 
 .file-label:hover {
-  background-color: #e8f0fe; /* Azul mais claro */
+  background: linear-gradient(to bottom, #f2f7ff, #e8f0fe);
   transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(26, 115, 232, 0.15);
 }
 
-.upload-button, .export-button, .copy-button, .reset-button {
+.file-label::before {
+  content: "📄";
+  margin-right: 10px;
+  font-size: 22px;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.file-label:hover::before {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Botões com gradientes e efeitos aprimorados */
+.upload-button, .reset-button {
   padding: 12px 28px;
-  background-color: #1a73e8; /* Azul */
+  background: linear-gradient(to right, #1a73e8, #4285f4);
   color: white;
   border: none;
   border-radius: 30px;
@@ -137,39 +163,96 @@ input[type="file"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-.upload-button:hover, .export-button:hover, .copy-button:hover, .reset-button:hover {
-  background-color: #4285f4; /* Azul mais claro no hover */
+.upload-button::before, .reset-button::before, .copy-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transition: all 0.8s;
+}
+
+.upload-button:hover::before, .reset-button:hover::before, .copy-button:hover::before {
+  left: 100%;
+}
+
+.upload-button:hover, .reset-button:hover, .copy-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(26, 115, 232, 0.4);
+  box-shadow: 0 6px 16px rgba(26, 115, 232, 0.4);
 }
 
-.export-button {
-  background-color: #4285f4; /* Azul um pouco mais claro */
-  margin-top: 25px;
+/* Botão de upload com ícone */
+.upload-button::after {
+  content: "📤";
+  margin-left: 10px;
+  font-size: 18px;
+}
+
+.upload-button:hover {
+  background: linear-gradient(to right, #0d5bcd, #1a73e8);
+}
+
+.upload-button:disabled {
+  background: linear-gradient(to right, #9aa0a6, #bdc1c6);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.upload-button:disabled::before {
+  display: none;
 }
 
 .copy-button {
-  background-color: #3367d6; /* Azul escuro */
+  background: linear-gradient(to right, #3367d6, #4285f4);
   color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 28px;
   margin-top: 15px;
   align-self: center;
-  min-width: 280px; /* Melhor tamanho para o texto */
+  min-width: 280px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(51, 103, 214, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
 .copy-button:hover {
-  background-color: #4285f4; /* Azul mais claro */
+  background: linear-gradient(to right, #2a56b9, #3367d6);
 }
 
 .reset-button {
-  background-color: #34a853; /* Verde Google */
+  background: linear-gradient(to right, #34a853, #46b965);
   margin: 20px 0;
 }
 
+.reset-button::after {
+  content: "🔄";
+  margin-left: 10px;
+  font-size: 18px;
+}
+
 .reset-button:hover {
-  background-color: #46b965;
+  background: linear-gradient(to right, #2d9549, #34a853);
 }
 
 .reset-button-container {
@@ -180,17 +263,6 @@ input[type="file"] {
 .print-icon, .copy-icon {
   margin-right: 8px;
   font-size: 18px;
-}
-
-.copy-icon {
-  font-weight: normal;
-}
-
-.upload-button:disabled {
-  background-color: #a4a4a4;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
 .loading {
@@ -255,6 +327,9 @@ input[type="file"] {
 }
 
 .text-view-container h2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #1a73e8;
   margin-bottom: 20px;
   text-align: center;
@@ -263,6 +338,33 @@ input[type="file"] {
   width: 100%;
   font-size: 1.5rem;
   font-weight: 600;
+}
+
+.text-view-container h2::before {
+  content: "👤";
+  margin-right: 10px;
+  font-size: 1.5rem;
+}
+
+/* Informações de resumo */
+.summary-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background-color: #f2f7ff;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1a73e8;
+}
+
+.file-count {
+  font-weight: 500;
+}
+
+.multi-file-notice {
+  color: #5f6368;
+  font-style: italic;
 }
 
 .copy-instructions {
@@ -294,12 +396,18 @@ input[type="file"] {
   margin-bottom: 20px;
   color: #333;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
 .results-text-area:focus {
   outline: none;
   border-color: #1a73e8;
   box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.results-text-area::selection {
+  background-color: #e8f0fe;
+  color: #1a73e8;
 }
 
 footer {
@@ -405,19 +513,20 @@ footer {
 
 /* Barra de progresso para upload e processamento */
 .progress-bar-container {
-  margin: 20px auto;
+  margin: 25px auto;
   width: 100%;
   max-width: 500px;
   padding: 0 20px;
 }
 
 .progress-bar {
-  height: 6px;
-  background-color: #e8f0fe;
-  border-radius: 3px;
+  height: 10px;
+  background-color: #edf3ff;
+  border-radius: 5px;
   overflow: hidden;
   position: relative;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
 }
 
 .progress-bar .progress-indicator {
@@ -425,36 +534,36 @@ footer {
   top: 0;
   left: 0;
   height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(to right, #1a73e8, #4285f4);
-  animation: progress-animation 2s infinite;
-  width: 30%;
+  border-radius: 5px;
+  background: linear-gradient(to right, #1a73e8, #4285f4, #1a73e8);
+  background-size: 200% 100%;
+  transition: width 0.3s ease;
+  animation: shimmer 2s infinite linear;
 }
 
-.progress-bar.upload .progress-indicator {
-  animation-duration: 2s;
-}
-
-.progress-bar.processing .progress-indicator {
-  animation-duration: 3s;
-  background: linear-gradient(to right, #4285f4, #1a73e8);
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 .progress-status {
   text-align: center;
   font-size: 14px;
   color: #1a73e8;
-  margin-top: 8px;
+  margin-top: 10px;
   font-weight: 500;
-}
-
-@keyframes progress-animation {
-  0% {
-    left: -30%;
-  }
-  100% {
-    left: 100%;
-  }
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  background-color: #e8f0fe;
+  padding: 8px 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 5px rgba(26, 115, 232, 0.15);
 }
 
 /* Status de upload - otimizado */
@@ -467,6 +576,7 @@ footer {
   font-size: 14px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   max-width: 500px;
+  animation: fade-in 0.4s ease-out;
 }
 
 .upload-status.iniciando,
@@ -534,7 +644,7 @@ footer {
   font-size: 14px;
 }
 
-/* Animação para status em progresso */
+/* Animações */
 @keyframes pulse-status {
   0% { opacity: 0.7; }
   50% { opacity: 1; }
@@ -575,6 +685,24 @@ footer {
   100% {
     box-shadow: 0 0 0 0 rgba(26, 115, 232, 0);
   }
+}
+
+@keyframes pulse-button {
+  0% {
+    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(26, 115, 232, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0);
+  }
+}
+
+.upload-button:not(:disabled):hover,
+.reset-button:hover,
+.copy-button:hover {
+  animation: pulse-button 1.5s infinite;
 }
 
 .upload-status.iniciando,
@@ -724,12 +852,318 @@ footer {
   box-shadow: 0 6px 12px rgba(26, 115, 232, 0.4);
 }
 
+/* Container principal para a lista de arquivos */
+.selected-files-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 25px auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e8f0fe;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  animation: slide-in 0.4s ease-out;
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selected-files-container:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+}
+
+/* Cabeçalho da lista de arquivos */
+.selected-files-container h3 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 17px;
+  color: #1a73e8;
+  font-weight: 600;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e8f0fe;
+  display: flex;
+  align-items: center;
+}
+
+.selected-files-container h3::before {
+  content: "📁";
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+/* Container para as ações da lista de arquivos */
+.files-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Botão para remover todos os arquivos */
+.clear-files-button {
+  background-color: #fff;
+  color: #ea4335;
+  border: 1px solid #ea4335;
+  border-radius: 24px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(234, 67, 53, 0.15);
+}
+
+.clear-files-button:hover {
+  background-color: #ea4335;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(234, 67, 53, 0.25);
+}
+
+.clear-files-button::before {
+  content: "🗑️";
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* Lista de arquivos selecionados */
+.selected-files-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 250px;
+  overflow-y: auto;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: inset 0 1px 5px rgba(0, 0, 0, 0.08);
+  scrollbar-width: thin;
+  scrollbar-color: #dadce0 #f8f9fa;
+}
+
+/* Estilização da barra de rolagem para navegadores WebKit */
+.selected-files-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.selected-files-list::-webkit-scrollbar-track {
+  background-color: #f8f9fa;
+
+/* Estilização da barra de rolagem para navegadores WebKit */
+.selected-files-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.selected-files-list::-webkit-scrollbar-track {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.selected-files-list::-webkit-scrollbar-thumb {
+  background-color: #dadce0;
+  border-radius: 4px;
+}
+
+.selected-files-list::-webkit-scrollbar-thumb:hover {
+  background-color: #bdc1c6;
+}
+
+/* Item da lista de arquivos */
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e8f0fe;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.file-item:last-child {
+  border-bottom: none;
+}
+
+.file-item:hover {
+  background-color: #f2f7ff;
+  padding-left: 20px;
+}
+
+/* Nome do arquivo */
+.file-name {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #3c4043;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.file-item:hover .file-name {
+  color: #1a73e8;
+}
+
+/* Ícone do PDF */
+.pdf-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 12px;
+  background-color: #f2f7ff;
+  border-radius: 6px;
+  color: #ea4335;
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.file-item:hover .pdf-icon {
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Tamanho do arquivo */
+.file-size {
+  margin-left: 10px;
+  color: #80868b;
+  font-size: 12px;
+  font-weight: 400;
+  background-color: #f2f2f2;
+  padding: 2px 8px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.file-item:hover .file-size {
+  background-color: #e8f0fe;
+  color: #1a73e8;
+}
+
+/* Botão para remover um arquivo específico */
+.remove-file-button {
+  background: none;
+  border: none;
+  width: 30px;
+  height: 30px;
+  color: #80868b;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  position: relative;
+  opacity: 0.7;
+}
+
+.remove-file-button:hover {
+  background-color: #fce8e6;
+  color: #ea4335;
+  opacity: 1;
+  transform: rotate(90deg);
+}
+
+.file-item:hover .remove-file-button {
+  opacity: 1;
+}
+
+/* Exibição de erros detalhados */
+.file-errors {
+  max-width: 600px;
+  margin: 15px auto;
+  background-color: #fff5f5;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.file-errors details {
+  width: 100%;
+}
+
+.file-errors summary {
+  padding: 15px;
+  background-color: #fce8e6;
+  color: #c5221f;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.file-errors summary::before {
+  content: "🔍";
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.file-errors summary::-webkit-details-marker {
+  display: none;
+}
+
+.file-errors .error-details {
+  margin: 0;
+  padding: 15px;
+  background-color: #fff;
+  color: #5f6368;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  border-top: 1px solid #fce8e6;
+}
+
+/* Animações para as mudanças de estado */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.upload-status, .error, .success-message {
+  animation: fade-in 0.4s ease-out;
+}
+
+/* Estilos para o indicador de erro de arquivo individual */
+.file-item .file-error {
+  color: #ea4335;
+  font-size: 12px;
+  margin-top: 3px;
+  margin-left: 24px;
+}
+
+/* Animações para transições de estado */
+.uploader-container, 
+.summary-container,
+.selected-files-container {
+  transition: all 0.4s ease;
+}
+
 /* Estilos para impressão */
 @media print {
   .uploader-container, .export-container, footer, .App-header .subtitle, 
   .view-mode-toggle, .api-status, .api-info, .copy-button, .reset-button-container,
   .progress-bar-container, .upload-status, .pdf-tips, .processing-notice, 
-  .error-container, .copy-instructions {
+  .error-container, .copy-instructions, .file-errors, .summary-info, 
+  .selected-files-container {
     display: none;
   }
   
@@ -773,7 +1207,7 @@ footer {
   }
 }
 
-/* Responsividade */
+/* Responsividade aprimorada */
 @media (max-width: 768px) {
   .App {
     margin: 10px;
@@ -841,4 +1275,48 @@ footer {
   main {
     padding: 20px 15px;
   }
+  
+  .selected-files-container {
+    padding: 15px;
+    margin: 15px auto;
+  }
+  
+  .file-item {
+    padding: 10px 12px;
+  }
+  
+  .pdf-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+  }
+  
+  .file-name {
+    font-size: 13px;
+  }
+  
+  .clear-files-button {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  
+  .upload-button, .reset-button, .copy-button {
+    font-size: 14px;
+    padding: 10px 20px;
+  }
+  
+  .progress-status {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  
+  .summary-info {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .results-text-area {
+    height: 300px;
+  }
+}
 }
