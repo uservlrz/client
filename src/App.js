@@ -1,4 +1,4 @@
-// App.js - Versão Minimalista e Elegante com Suporte ao Vercel Blob
+// App.js - Versão Minimalista e Elegante
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './App.css';
 import ErrorHandler from './components/ErrorHandler';
@@ -41,8 +41,6 @@ function App() {
           setApiStatus({
             status: 'online',
             env: data.env,
-            blobSupport: data.blobSupport,
-            limits: data.limits,
             url: API_URL
           });
         } else {
@@ -73,13 +71,7 @@ function App() {
         const response = await fetch(`${API_URL}/api/health`);
         if (response.ok) {
           const data = await response.json();
-          setApiStatus({ 
-            status: 'online', 
-            env: data.env, 
-            blobSupport: data.blobSupport,
-            limits: data.limits,
-            url: API_URL 
-          });
+          setApiStatus({ status: 'online', env: data.env, url: API_URL });
           setError(null);
         } else {
           setApiStatus({ status: 'error', message: `Erro ${response.status}`, url: API_URL });
@@ -167,123 +159,7 @@ function App() {
     }
   }, []);
 
-  // NOVA FUNÇÃO: Converter arquivo para base64
-  const fileToBase64 = useCallback((file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const base64 = reader.result.split(',')[1]; // Remove o prefixo data:...
-        resolve(base64);
-      };
-      reader.onerror = error => reject(error);
-    });
-  }, []);
-
-  // NOVA FUNÇÃO: Upload para arquivos grandes via Vercel Blob
-  const uploadLargeFile = useCallback(async (file) => {
-    try {
-      const MAX_SIZE = 100 * 1024 * 1024; // 100MB
-      
-      if (file.size > MAX_SIZE) {
-        throw new Error(`Arquivo muito grande (${(file.size / 1024 / 1024).toFixed(2)}MB). Máximo: 100MB`);
-      }
-      
-      setUploadStatus({ 
-        stage: 'convertendo', 
-        message: 'Preparando arquivo grande...',
-        timestamp: new Date().toLocaleTimeString()
-      });
-      
-      // Converter arquivo para base64
-      const base64Data = await fileToBase64(file);
-      
-      setUploadStatus({ 
-        stage: 'enviando', 
-        message: 'Enviando arquivo grande via Blob...',
-        timestamp: new Date().toLocaleTimeString()
-      });
-      
-      // Enviar para rota especial de arquivos grandes
-      const response = await fetch(`${API_URL}/api/upload-large`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          filename: file.name,
-          fileData: base64Data
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Erro ${response.status}`);
-      }
-      
-      return await response.json();
-      
-    } catch (error) {
-      console.error('Erro no upload de arquivo grande:', error);
-      throw error;
-    }
-  }, [fileToBase64]);
-
-  // NOVA FUNÇÃO: Upload para arquivos pequenos (método original)
-  const uploadSmallFile = useCallback(async (file) => {
-    try {
-      const formData = new FormData();
-      formData.append('pdf', file);
-      
-      const response = await fetch(`${API_URL}/api/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        let errorMessage = `Erro ${response.status}: ${response.statusText}`;
-        try {
-          const errorData = await response.json();
-          if (errorData.message) {
-            errorMessage = errorData.message;
-          }
-          
-          // Se o erro for 413 e sugerir upload large, tentar automaticamente
-          if (response.status === 413 && errorData.shouldUseLargeUpload) {
-            console.log('Arquivo muito grande para upload direto, tentando via Blob...');
-            return await uploadLargeFile(file);
-          }
-        } catch (jsonError) {
-          // Continuar com mensagem padrão
-        }
-        throw new Error(errorMessage);
-      }
-      
-      return await response.json();
-      
-    } catch (error) {
-      console.error('Erro no upload de arquivo pequeno:', error);
-      throw error;
-    }
-  }, [uploadLargeFile]);
-
-  // NOVA FUNÇÃO: Determinar método de upload baseado no tamanho
-  const processFile = useCallback(async (file) => {
-  const fileSizeMB = file.size / (1024 * 1024);
-  const LARGE_FILE_THRESHOLD = 4.5; // 4.5MB
-  
-  console.log(`Processando arquivo: ${file.name} (${fileSizeMB.toFixed(2)}MB)`);
-  
-  if (fileSizeMB > LARGE_FILE_THRESHOLD) {
-    console.log('Usando método de upload para arquivo grande (Vercel Blob)');
-    return await uploadLargeFile(file);
-  } else {
-    console.log('Usando método de upload direto');
-    return await uploadSmallFile(file);
-  }
-  }, [uploadLargeFile, uploadSmallFile]);
-
-  // FUNÇÃO ATUALIZADA: Upload e processamento principal
+  // Função principal de upload e processamento
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (files.length === 0) {
@@ -310,18 +186,21 @@ function App() {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const fileNumber = i + 1;
-      const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
       setCurrentProcessingFile(file.name);
       
       try {
-        // Determinar método de upload
-        const isLargeFile = file.size > 4.5 * 1024 * 1024;
-        const uploadMethod = isLargeFile ? 'Blob' : 'Direto';
+        const formData = new FormData();
+        formData.append('pdf', file);
         
         setUploadStatus({ 
           stage: 'enviando', 
-          message: `${uploadMethod} ${fileNumber}/${files.length}: ${file.name.substring(0, 30)}${file.name.length > 30 ? '...' : ''} (${fileSizeMB}MB)`,
+          message: `Enviando ${fileNumber}/${files.length}: ${file.name.substring(0, 30)}${file.name.length > 30 ? '...' : ''}`,
           timestamp: new Date().toLocaleTimeString()
+        });
+        
+        const response = await fetch(`${API_URL}/api/upload`, {
+          method: 'POST',
+          body: formData,
         });
         
         setProcessingStage('processing');
@@ -331,8 +210,20 @@ function App() {
           timestamp: new Date().toLocaleTimeString()
         });
         
-        // Usar a nova função que determina automaticamente o método
-        const data = await processFile(file);
+        if (!response.ok) {
+          let errorMessage = `Erro ${response.status}: ${response.statusText}`;
+          try {
+            const errorData = await response.json();
+            if (errorData.message) {
+              errorMessage = errorData.message;
+            }
+          } catch (jsonError) {
+            // Continuar com mensagem padrão
+          }
+          throw new Error(`Erro no arquivo ${file.name}: ${errorMessage}`);
+        }
+        
+        const data = await response.json();
         
         if (!data.summaries || data.summaries.length === 0) {
           throw new Error(`Não foi possível extrair informações do documento ${file.name}.`);
@@ -346,8 +237,7 @@ function App() {
           ...summary,
           fileName: file.name,
           patientName: data.patientName,
-          processedAt: new Date().toLocaleTimeString(),
-          uploadMethod: data.uploadMethod || 'unknown'
+          processedAt: new Date().toLocaleTimeString()
         }));
         
         allSummaries.push(...fileSummaries);
@@ -525,10 +415,7 @@ function App() {
           <div className={`api-status ${apiStatus.status}`}>
             <span className="status-indicator"></span>
             {apiStatus.status === 'online' ? (
-              <span>
-                Conectado ({apiStatus.env})
-                {apiStatus.blobSupport && <span className="blob-support"> • Blob ativo</span>}
-              </span>
+              <span>Conectado ({apiStatus.env})</span>
             ) : apiStatus.status === 'checking' ? (
               <span>Verificando...</span>
             ) : (
@@ -593,29 +480,23 @@ function App() {
                   </button>
                 </div>
                 <ul className="selected-files-list">
-                  {files.map((file, index) => {
-                    const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
-                    const isLargeFile = file.size > 4.5 * 1024 * 1024;
-                    return (
-                      <li key={`${file.name}-${index}`} className="file-item">
-                        <span className="file-name">
-                          <span className="pdf-icon">📄</span>
-                          {file.name}
-                          <span className={`file-size ${isLargeFile ? 'large-file' : ''}`}>
-                            ({fileSizeMB} MB) {isLargeFile && '• Via Blob'}
-                          </span>
-                        </span>
-                        <button 
-                          type="button" 
-                          className="remove-file-button" 
-                          onClick={() => removeFile(index)}
-                          disabled={loading}
-                        >
-                          ×
-                        </button>
-                      </li>
-                    );
-                  })}
+                  {files.map((file, index) => (
+                    <li key={`${file.name}-${index}`} className="file-item">
+                      <span className="file-name">
+                        <span className="pdf-icon">📄</span>
+                        {file.name}
+                        <span className="file-size">({(file.size / 1024).toFixed(1)} KB)</span>
+                      </span>
+                      <button 
+                        type="button" 
+                        className="remove-file-button" 
+                        onClick={() => removeFile(index)}
+                        disabled={loading}
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
@@ -730,9 +611,6 @@ function App() {
             <div className="empty-message">
               <p>Os resultados dos exames aparecerão aqui.</p>
               <p>Selecione arquivos PDF para começar.</p>
-              {apiStatus?.blobSupport && (
-                <p className="blob-info">✨ Suporte a arquivos grandes ativado (até 100MB)</p>
-              )}
             </div>
           ) : (
             <div className="text-view-container">
@@ -772,7 +650,6 @@ function App() {
         <p>© 2025 - Instituto Paulo Godoi - Sistema de Processamento de Exames</p>
         <p className="api-info">
           Ambiente: {apiStatus?.env || 'Desconectado'} | API: {API_URL}
-          {apiStatus?.blobSupport && <span className="blob-support"> • Blob</span>}
         </p>
       </footer>
     </div>
