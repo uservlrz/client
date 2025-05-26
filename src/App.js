@@ -269,18 +269,18 @@ function App() {
 
   // NOVA FUNÇÃO: Determinar método de upload baseado no tamanho
   const processFile = useCallback(async (file) => {
-    const fileSizeMB = file.size / (1024 * 1024);
-    const LARGE_FILE_THRESHOLD = 4; // 4MB
-    
-    console.log(`Processando arquivo: ${file.name} (${fileSizeMB.toFixed(2)}MB)`);
-    
-    if (fileSizeMB > LARGE_FILE_THRESHOLD) {
-      console.log('Usando método de upload para arquivo grande (Vercel Blob)');
-      return await uploadLargeFile(file);
-    } else {
-      console.log('Usando método de upload direto');
-      return await uploadSmallFile(file);
-    }
+  const fileSizeMB = file.size / (1024 * 1024);
+  const LARGE_FILE_THRESHOLD = 4.5; // 4.5MB
+  
+  console.log(`Processando arquivo: ${file.name} (${fileSizeMB.toFixed(2)}MB)`);
+  
+  if (fileSizeMB > LARGE_FILE_THRESHOLD) {
+    console.log('Usando método de upload para arquivo grande (Vercel Blob)');
+    return await uploadLargeFile(file);
+  } else {
+    console.log('Usando método de upload direto');
+    return await uploadSmallFile(file);
+  }
   }, [uploadLargeFile, uploadSmallFile]);
 
   // FUNÇÃO ATUALIZADA: Upload e processamento principal
@@ -315,7 +315,7 @@ function App() {
       
       try {
         // Determinar método de upload
-        const isLargeFile = file.size > 4 * 1024 * 1024;
+        const isLargeFile = file.size > 4.5 * 1024 * 1024;
         const uploadMethod = isLargeFile ? 'Blob' : 'Direto';
         
         setUploadStatus({ 
@@ -595,7 +595,7 @@ function App() {
                 <ul className="selected-files-list">
                   {files.map((file, index) => {
                     const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
-                    const isLargeFile = file.size > 4 * 1024 * 1024;
+                    const isLargeFile = file.size > 4.5 * 1024 * 1024;
                     return (
                       <li key={`${file.name}-${index}`} className="file-item">
                         <span className="file-name">
