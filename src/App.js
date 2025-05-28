@@ -1,4 +1,4 @@
-// App.js - Versão com Divisor de PDF Integrado
+// App.js - Versão com Divisor de PDF Integrado (Múltiplos Arquivos)
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './App.css';
 import ErrorHandler from './components/ErrorHandler';
@@ -8,7 +8,7 @@ function getApiUrl() {
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:5000';
   }
-  return 'https://server-theta-murex.vercel.app';
+   return 'https://server-theta-murex.vercel.app';
 }
 
 const API_URL = getApiUrl();
@@ -27,14 +27,15 @@ function App() {
   const [totalFiles, setTotalFiles] = useState(0);
   const [dragOver, setDragOver] = useState(false);
   
-  // Estados para o divisor de PDF
+  // Estados para o divisor de PDF (modificados para múltiplos arquivos)
   const [activeTab, setActiveTab] = useState('extractor'); // 'extractor' ou 'splitter'
-  const [selectedFileForSplit, setSelectedFileForSplit] = useState(null);
+  const [selectedFilesForSplit, setSelectedFilesForSplit] = useState([]);
   const [isSplitting, setIsSplitting] = useState(false);
   const [splitError, setSplitError] = useState(null);
   const [splitSuccess, setSplitSuccess] = useState(null);
   const [splitFiles, setSplitFiles] = useState([]);
   const [dragOverSplitter, setDragOverSplitter] = useState(false);
+  const [splittingProgress, setSplittingProgress] = useState({ current: 0, total: 0, fileName: '' });
   
   const textAreaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -132,10 +133,11 @@ function App() {
 
   // Função para resetar o estado do divisor
   const resetSplitter = useCallback(() => {
-    setSelectedFileForSplit(null);
+    setSelectedFilesForSplit([]);
     setSplitFiles([]);
     setSplitError(null);
     setSplitSuccess(null);
+    setSplittingProgress({ current: 0, total: 0, fileName: '' });
     if (splitFileInputRef.current) {
       splitFileInputRef.current.value = '';
     }
@@ -171,7 +173,7 @@ function App() {
     setProcessingStage(null);
   }, []);
 
-  // Handlers para drag and drop do divisor
+  // Handlers para drag and drop do divisor (modificados para múltiplos arquivos)
   const handleSplitterDragOver = useCallback((e) => {
     e.preventDefault();
     setDragOverSplitter(true);
@@ -187,15 +189,15 @@ function App() {
     setDragOverSplitter(false);
     
     const droppedFiles = Array.from(e.dataTransfer.files);
-    const pdfFile = droppedFiles.find(file => file.type === 'application/pdf');
+    const pdfFiles = droppedFiles.filter(file => file.type === 'application/pdf');
     
-    if (pdfFile) {
-      setSelectedFileForSplit(pdfFile);
+    if (pdfFiles.length > 0) {
+      setSelectedFilesForSplit(prevFiles => [...prevFiles, ...pdfFiles]);
       setSplitError(null);
       setSplitFiles([]);
       setSplitSuccess(null);
-    } else {
-      setSplitError('Por favor, solte apenas um arquivo PDF válido.');
+    } else if (droppedFiles.length > 0) {
+      setSplitError('Por favor, solte apenas arquivos PDF válidos.');
       setTimeout(() => setSplitError(null), 3000);
     }
   }, []);
@@ -217,14 +219,17 @@ function App() {
     setError(null);
   }, []);
 
+  // Modificado para múltiplos arquivos
   const handleSplitFileChange = useCallback((e) => {
-    const file = e.target.files[0];
-    if (file && file.type === 'application/pdf') {
-      setSelectedFileForSplit(file);
+    const selectedFiles = Array.from(e.target.files);
+    const pdfFiles = selectedFiles.filter(file => file.type === 'application/pdf');
+    
+    if (pdfFiles.length > 0) {
+      setSelectedFilesForSplit(prevFiles => [...prevFiles, ...pdfFiles]);
       setSplitError(null);
       setSplitFiles([]);
       setSplitSuccess(null);
-    } else if (file) {
+    } else if (selectedFiles.length > 0) {
       setSplitError('Por favor, selecione apenas arquivos PDF válidos.');
       setTimeout(() => setSplitError(null), 3000);
     }
@@ -235,6 +240,11 @@ function App() {
     setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
   }, []);
 
+  // Função para remover arquivo do divisor
+  const removeSplitFile = useCallback((index) => {
+    setSelectedFilesForSplit(prevFiles => prevFiles.filter((_, i) => i !== index));
+  }, []);
+
   // Função para limpar todos os arquivos do extrator
   const clearAllFiles = useCallback(() => {
     setFiles([]);
@@ -243,10 +253,68 @@ function App() {
     }
   }, []);
 
-  // Função principal para dividir PDF
-  const splitPDF = useCallback(async () => {
-    if (!selectedFileForSplit) {
-      setSplitError('Por favor, selecione um arquivo PDF primeiro.');
+  // Função para limpar todos os arquivos do divisor
+  const clearAllSplitFiles = useCallback(() => {
+    setSelectedFilesForSplit([]);
+    if (splitFileInputRef.current) {
+      splitFileInputRef.current.value = '';
+    }
+  }, []);
+
+  // Função para dividir um único PDF
+  const splitSinglePDF = useCallback(async (file, PDFLib) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+    
+    const totalPages = pdfDoc.getPageCount();
+    
+    if (totalPages < 2) {
+      throw new Error(`O PDF "${file.name}" deve ter pelo menos 2 páginas para ser dividido.`);
+    }
+
+    const middlePage = Math.ceil(totalPages / 2);
+
+    // Criar primeiro PDF (primeira metade)
+    const firstPdf = await PDFLib.PDFDocument.create();
+    const firstHalfPages = await firstPdf.copyPages(pdfDoc, Array.from({ length: middlePage }, (_, i) => i));
+    firstHalfPages.forEach(page => firstPdf.addPage(page));
+
+    // Criar segundo PDF (segunda metade)
+    const secondPdf = await PDFLib.PDFDocument.create();
+    const secondHalfPages = await secondPdf.copyPages(pdfDoc, Array.from({ length: totalPages - middlePage }, (_, i) => i + middlePage));
+    secondHalfPages.forEach(page => secondPdf.addPage(page));
+
+    // Gerar os PDFs como bytes
+    const firstPdfBytes = await firstPdf.save();
+    const secondPdfBytes = await secondPdf.save();
+
+    // Criar nomes para os arquivos
+    const originalName = file.name.replace('.pdf', '');
+    const firstName = `${originalName}_parte1.pdf`;
+    const secondName = `${originalName}_parte2.pdf`;
+
+    return [
+      {
+        name: firstName,
+        bytes: firstPdfBytes,
+        pages: middlePage,
+        blob: new Blob([firstPdfBytes], { type: 'application/pdf' }),
+        originalFile: file.name
+      },
+      {
+        name: secondName,
+        bytes: secondPdfBytes,
+        pages: totalPages - middlePage,
+        blob: new Blob([secondPdfBytes], { type: 'application/pdf' }),
+        originalFile: file.name
+      }
+    ];
+  }, []);
+
+  // Função principal para dividir PDFs (modificada para múltiplos arquivos)
+  const splitPDFs = useCallback(async () => {
+    if (selectedFilesForSplit.length === 0) {
+      setSplitError('Por favor, selecione pelo menos um arquivo PDF primeiro.');
       return;
     }
 
@@ -254,67 +322,59 @@ function App() {
     setSplitError(null);
     setSplitSuccess(null);
     setSplitFiles([]);
+    setSplittingProgress({ current: 0, total: selectedFilesForSplit.length, fileName: '' });
 
     try {
       const PDFLib = await loadPDFLib();
-      const arrayBuffer = await selectedFileForSplit.arrayBuffer();
-      const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
-      
-      const totalPages = pdfDoc.getPageCount();
-      
-      if (totalPages < 2) {
-        setSplitError('O PDF deve ter pelo menos 2 páginas para ser dividido.');
-        setIsSplitting(false);
-        return;
+      const allSplitFiles = [];
+      const errors = [];
+
+      for (let i = 0; i < selectedFilesForSplit.length; i++) {
+        const file = selectedFilesForSplit[i];
+        setSplittingProgress({ 
+          current: i + 1, 
+          total: selectedFilesForSplit.length, 
+          fileName: file.name 
+        });
+
+        try {
+          const splitResults = await splitSinglePDF(file, PDFLib);
+          allSplitFiles.push(...splitResults);
+        } catch (error) {
+          console.error(`Erro ao dividir ${file.name}:`, error);
+          errors.push({ fileName: file.name, error: error.message });
+        }
       }
 
-      const middlePage = Math.ceil(totalPages / 2);
+      setSplitFiles(allSplitFiles);
 
-      // Criar primeiro PDF (primeira metade)
-      const firstPdf = await PDFLib.PDFDocument.create();
-      const firstHalfPages = await firstPdf.copyPages(pdfDoc, Array.from({ length: middlePage }, (_, i) => i));
-      firstHalfPages.forEach(page => firstPdf.addPage(page));
-
-      // Criar segundo PDF (segunda metade)
-      const secondPdf = await PDFLib.PDFDocument.create();
-      const secondHalfPages = await secondPdf.copyPages(pdfDoc, Array.from({ length: totalPages - middlePage }, (_, i) => i + middlePage));
-      secondHalfPages.forEach(page => secondPdf.addPage(page));
-
-      // Gerar os PDFs como bytes
-      const firstPdfBytes = await firstPdf.save();
-      const secondPdfBytes = await secondPdf.save();
-
-      // Criar nomes para os arquivos
-      const originalName = selectedFileForSplit.name.replace('.pdf', '');
-      const firstName = `${originalName}_parte1.pdf`;
-      const secondName = `${originalName}_parte2.pdf`;
-
-      // Criar objetos de arquivo para download
-      const splitResults = [
-        {
-          name: firstName,
-          bytes: firstPdfBytes,
-          pages: middlePage,
-          blob: new Blob([firstPdfBytes], { type: 'application/pdf' })
-        },
-        {
-          name: secondName,
-          bytes: secondPdfBytes,
-          pages: totalPages - middlePage,
-          blob: new Blob([secondPdfBytes], { type: 'application/pdf' })
-        }
-      ];
-
-      setSplitFiles(splitResults);
-      setSplitSuccess(`PDF dividido com sucesso! Total de ${totalPages} páginas divididas em 2 arquivos.`);
+      if (errors.length === 0) {
+        setSplitSuccess(
+          `Todos os ${selectedFilesForSplit.length} PDFs foram divididos com sucesso! ` +
+          `Total de ${allSplitFiles.length} arquivos gerados.`
+        );
+      } else if (allSplitFiles.length > 0) {
+        setSplitSuccess(
+          `${selectedFilesForSplit.length - errors.length} de ${selectedFilesForSplit.length} PDFs foram divididos com sucesso. ` +
+          `Total de ${allSplitFiles.length} arquivos gerados.`
+        );
+        setSplitError(
+          `Alguns arquivos não puderam ser processados:\n${errors.map(e => `• ${e.fileName}: ${e.error}`).join('\n')}`
+        );
+      } else {
+        setSplitError(
+          `Nenhum arquivo pôde ser processado:\n${errors.map(e => `• ${e.fileName}: ${e.error}`).join('\n')}`
+        );
+      }
 
     } catch (error) {
-      console.error('Erro ao dividir PDF:', error);
-      setSplitError('Erro ao processar o PDF. Verifique se o arquivo não está corrompido ou protegido por senha.');
+      console.error('Erro ao carregar PDF-lib:', error);
+      setSplitError('Erro ao carregar a biblioteca de processamento de PDF. Tente recarregar a página.');
     } finally {
       setIsSplitting(false);
+      setSplittingProgress({ current: 0, total: 0, fileName: '' });
     }
-  }, [selectedFileForSplit, loadPDFLib]);
+  }, [selectedFilesForSplit, loadPDFLib, splitSinglePDF]);
 
   // Função para download de arquivo
   const downloadFile = useCallback((fileData) => {
@@ -394,7 +454,7 @@ function App() {
               errorMessage = errorData.message;
             }
           } catch (jsonError) {
-            // Continuar com mensagem padrão
+
           }
           throw new Error(`Erro no arquivo ${file.name}: ${errorMessage}`);
         }
@@ -897,13 +957,13 @@ function App() {
                 Divisor de PDF
               </h2>
               <p className="section-description">
-                <strong>Divida PDFs grandes em partes menores para extração.</strong> 
+                <strong>Divida múltiplos PDFs grandes em partes menores para extração.</strong> 
                 Arquivos com mais de 4MB devem ser divididos antes de usar o extrator de resultados.
               </p>
               <div className="splitter-benefits">
                 <div className="benefit-item">
                   <span className="benefit-icon">🎯</span>
-                  <span>Ideal para PDFs com mais de 4MB</span>
+                  <span>Processe vários PDFs de uma só vez</span>
                 </div>
                 <div className="benefit-item">
                   <span className="benefit-icon">🔒</span>
@@ -928,61 +988,116 @@ function App() {
                 ref={splitFileInputRef}
                 onChange={handleSplitFileChange}
                 accept="application/pdf"
+                multiple
                 style={{ display: 'none' }}
               />
               
               <label htmlFor="pdf-split-upload" className={`splitter-file-label ${dragOverSplitter ? 'drag-active' : ''}`}>
                 <div className="splitter-upload-content">
                   <span className="splitter-upload-icon">
-                    {selectedFileForSplit ? '✓' : '📎'}
+                    {selectedFilesForSplit.length > 0 ? '✓' : '📎'}
                   </span>
-                  {selectedFileForSplit ? (
-                    <div className="selected-file-info">
-                      <p className="selected-file-name">{selectedFileForSplit.name}</p>
-                      <p className="selected-file-size">
-                        {(selectedFileForSplit.size / 1024 / 1024).toFixed(1)} MB
+                  {selectedFilesForSplit.length > 0 ? (
+                    <div className="selected-files-info">
+                      <p className="selected-files-count">
+                        {selectedFilesForSplit.length} arquivo{selectedFilesForSplit.length > 1 ? 's' : ''} selecionado{selectedFilesForSplit.length > 1 ? 's' : ''}
+                      </p>
+                      <p className="selected-files-size">
+                        Total: {(selectedFilesForSplit.reduce((acc, file) => acc + file.size, 0) / 1024 / 1024).toFixed(1)} MB
                       </p>
                     </div>
                   ) : dragOverSplitter ? (
                     <div className="drag-message">
-                      <p>Solte o arquivo PDF aqui</p>
+                      <p>Solte os arquivos PDF aqui</p>
                     </div>
                   ) : (
                     <div className="upload-message">
-                      <p>Selecione ou arraste um arquivo PDF</p>
-                      <span className="upload-hint">Clique aqui ou arraste e solte seu PDF</span>
+                      <p>Selecione ou arraste arquivos PDF</p>
+                      <span className="upload-hint">Clique aqui ou arraste e solte seus PDFs</span>
                     </div>
                   )}
                 </div>
               </label>
 
+              {/* Lista de arquivos selecionados para dividir */}
+              {selectedFilesForSplit.length > 0 && (
+                <div className="selected-split-files-container">
+                  <h3>Arquivos para Dividir</h3>
+                  <div className="split-files-actions">
+                    <button 
+                      type="button" 
+                      className="clear-split-files-button" 
+                      onClick={clearAllSplitFiles}
+                      disabled={isSplitting}
+                    >
+                      Remover todos
+                    </button>
+                  </div>
+                  <ul className="selected-split-files-list">
+                    {selectedFilesForSplit.map((file, index) => {
+                      const fileSizeMB = file.size / 1024 / 1024;
+                      return (
+                        <li key={`split-${file.name}-${index}`} className="split-file-item">
+                          <span className="split-file-name">
+                            <span className="pdf-icon">📄</span>
+                            {file.name}
+                            <span className="split-file-size">
+                              ({fileSizeMB.toFixed(1)} MB)
+                            </span>
+                          </span>
+                          <button 
+                            type="button" 
+                            className="remove-split-file-button" 
+                            onClick={() => removeSplitFile(index)}
+                            disabled={isSplitting}
+                          >
+                            ×
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+
               <div className="splitter-actions">
                 <button
-                  onClick={splitPDF}
-                  disabled={!selectedFileForSplit || isSplitting}
+                  onClick={splitPDFs}
+                  disabled={selectedFilesForSplit.length === 0 || isSplitting}
                   className={`split-button ${isSplitting ? 'loading' : ''}`}
                 >
                   <span className="button-icon">✂️</span>
-                  {isSplitting ? 'Dividindo PDF...' : 'Dividir PDF em 2'}
+                  {isSplitting ? (
+                    `Dividindo ${splittingProgress.current}/${splittingProgress.total}...`
+                  ) : (
+                    `Dividir ${selectedFilesForSplit.length} PDF${selectedFilesForSplit.length > 1 ? 's' : ''}`
+                  )}
                 </button>
 
-                {selectedFileForSplit && (
+                {selectedFilesForSplit.length > 0 && (
                   <button
                     onClick={resetSplitter}
                     className="reset-splitter-button"
                     disabled={isSplitting}
                   >
-                    Selecionar Outro
+                    Limpar Seleção
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Indicador de processamento */}
+            {/* Indicador de processamento com progresso */}
             {isSplitting && (
               <div className="split-processing">
                 <div className="processing-spinner"></div>
-                <span className="processing-text">Processando PDF...</span>
+                <div className="processing-info">
+                  <span className="processing-text">
+                    Processando: {splittingProgress.fileName}
+                  </span>
+                  <div className="processing-progress">
+                    {splittingProgress.current} de {splittingProgress.total} arquivos
+                  </div>
+                </div>
               </div>
             )}
 
@@ -990,7 +1105,7 @@ function App() {
             {splitError && (
               <div className="split-error">
                 <span className="error-icon">✗</span>
-                <span className="error-text">{splitError}</span>
+                <pre className="error-text">{splitError}</pre>
               </div>
             )}
 
@@ -1008,7 +1123,7 @@ function App() {
                 <div className="split-results-header">
                   <h3>
                     <span className="results-icon">📁</span>
-                    Arquivos Gerados
+                    Arquivos Gerados ({splitFiles.length})
                   </h3>
                   <button
                     onClick={downloadAll}
@@ -1027,6 +1142,7 @@ function App() {
                         <div className="file-card-info">
                           <h4 className="file-card-name">{file.name}</h4>
                           <span className="file-card-pages">{file.pages} páginas</span>
+                          <span className="file-card-original">De: {file.originalFile}</span>
                         </div>
                       </div>
                       <button
@@ -1045,7 +1161,7 @@ function App() {
                     onClick={resetSplitter}
                     className="new-split-button"
                   >
-                    Dividir outro PDF
+                    Dividir outros PDFs
                   </button>
                 </div>
               </div>
@@ -1055,11 +1171,12 @@ function App() {
             <div className="splitter-info">
               <h4>Como funciona:</h4>
               <ul>
-                <li>Selecione um arquivo PDF com pelo menos 2 páginas</li>
-                <li>O PDF será dividido automaticamente pela metade</li>
+                <li>Selecione um ou mais arquivos PDF com pelo menos 2 páginas cada</li>
+                <li>Cada PDF será dividido automaticamente pela metade</li>
                 <li>Se o PDF tiver número ímpar de páginas, a primeira parte terá uma página a mais</li>
                 <li>Os arquivos são processados localmente no seu navegador (sem upload para servidor)</li>
                 <li>Seus dados permanecem seguros e privados</li>
+                <li>Processe múltiplos arquivos de uma vez para economizar tempo</li>
               </ul>
             </div>
           </div>
