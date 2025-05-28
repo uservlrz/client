@@ -1685,6 +1685,233 @@ footer {
   transform: translateY(-50%);
 }
 
+/* ===== HOTFIX PARA MOBILE - ADICIONAR AO FINAL DO APP.CSS ===== */
+
+/* Prevenção global de overflow horizontal */
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+
+/* Correções específicas para o problema de alinhamento do file input */
+@media (max-width: 768px) {
+  
+  /* Container principal */
+  .App {
+    margin: 10px !important;
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Main container */
+  main {
+    padding: 20px 15px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* File input container - CORREÇÃO PRINCIPAL */
+  .uploader-container {
+    padding: 15px !important;
+    margin-bottom: 20px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+  
+  .file-input-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+  }
+  
+  /* CORREÇÃO CRÍTICA: File label que estava extrapolando */
+  .file-label {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 15px 10px !important;
+    font-size: 13px !important;
+    white-space: normal !important;
+    text-align: center !important;
+    line-height: 1.3 !important;
+    overflow: hidden !important;
+    word-wrap: break-word !important;
+    display: block !important;
+  }
+  
+  /* Divisor PDF */
+  .splitter-uploader-container {
+    padding: 15px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+  
+  .splitter-file-label {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  .splitter-upload-content {
+    width: 100% !important;
+    padding: 15px 10px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+  
+  /* Listas de arquivos */
+  .selected-files-container,
+  .selected-split-files-container {
+    width: calc(100% - 10px) !important;
+    margin: 15px 5px !important;
+    padding: 15px !important;
+    box-sizing: border-box !important;
+  }
+  
+  .file-item,
+  .split-file-item {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 10px 0 !important;
+    overflow: hidden !important;
+  }
+  
+  .file-name,
+  .split-file-name {
+    max-width: calc(100% - 60px) !important;
+    overflow: hidden !important;
+    font-size: 12px !important;
+  }
+  
+  /* Texto do nome do arquivo - truncar se muito longo */
+  .file-name > span:first-child,
+  .split-file-name > span:first-child {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 200px !important;
+  }
+  
+  /* Botões */
+  .upload-button,
+  .split-button,
+  .reset-button,
+  .copy-button {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 10px 0 !important;
+  }
+  
+  /* Navegação por abas */
+  .tab-navigation {
+    margin: 15px 5px 20px 5px !important;
+    width: calc(100% - 10px) !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Avisos e alertas */
+  .size-warning-card,
+  .file-size-alert {
+    width: calc(100% - 10px) !important;
+    margin-left: 5px !important;
+    margin-right: 5px !important;
+    box-sizing: border-box !important;
+    padding: 15px !important;
+  }
+  
+  /* Área de resultados */
+  .text-view-container {
+    padding: 15px !important;
+  }
+  
+  .results-text-area {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 12px !important;
+  }
+  
+  /* Grid de arquivos divididos */
+  .split-files-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  
+  .split-file-card {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 12px !important;
+  }
+  
+  /* Garante que botões de remoção sejam sempre visíveis no mobile */
+  .remove-file-button,
+  .remove-split-file-button {
+    opacity: 1 !important;
+    background: #fee2e2 !important;
+    color: #ef4444 !important;
+    border-radius: 50% !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+/* Para dispositivos muito pequenos */
+@media (max-width: 480px) {
+  .App {
+    margin: 5px !important;
+    width: calc(100vw - 10px) !important;
+  }
+  
+  main {
+    padding: 15px 10px !important;
+  }
+  
+  .file-label,
+  .splitter-upload-content {
+    padding: 12px 8px !important;
+    font-size: 12px !important;
+  }
+  
+  .file-name > span:first-child,
+  .split-file-name > span:first-child {
+    max-width: 150px !important;
+  }
+  
+  .tab-button {
+    padding: 8px 4px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* Correção adicional para evitar qualquer overflow */
+@media (max-width: 768px) {
+  * {
+    max-width: 100vw !important;
+  }
+  
+  div, section, article, main, form, label, button {
+    box-sizing: border-box !important;
+  }
+  
+  /* Força elementos que podem dar overflow a ficarem dentro dos limites */
+  .file-label,
+  .splitter-upload-content,
+  .uploader-container,
+  .splitter-uploader-container {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
 /* Animações de entrada staggered */
 .file-item:nth-child(1) { animation-delay: 0.1s; }
 .file-item:nth-child(2) { animation-delay: 0.2s; }
