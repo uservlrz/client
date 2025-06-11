@@ -1,4 +1,4 @@
-// App.js - Versão com Divisor de PDF Configurável (1, 2, 3 ou 4 partes)
+// App.js - Versão com Chunked Upload integrado
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './App.css';
 import ErrorHandler from './components/ErrorHandler';
@@ -12,6 +12,89 @@ function getApiUrl() {
 }
 
 const API_URL = getApiUrl();
+
+// Classe para gerenciar uploads chunked
+class ChunkedUploader {
+  constructor(chunkSize = 3.5 * 1024 * 1024) { // 3.5MB por chunk
+    this.chunkSize = chunkSize;
+  }
+
+  async uploadFile(file, onProgress) {
+    if (file.size <= 4 * 1024 * 1024) {
+      return this.uploadNormal(file, onProgress);
+    } else {
+      return this.uploadChunked(file, onProgress);
+    }
+  }
+
+  async uploadNormal(file, onProgress) {
+    const formData = new FormData();
+    formData.append('pdf', file);
+    
+    const response = await fetch(`${API_URL}/api/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (onProgress) onProgress(100);
+    
+    if (!response.ok) {
+      let errorMessage = `Erro ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.message) errorMessage = errorData.message;
+      } catch (jsonError) {}
+      throw new Error(errorMessage);
+    }
+    
+    return response.json();
+  }
+
+  async uploadChunked(file, onProgress) {
+    const totalChunks = Math.ceil(file.size / this.chunkSize);
+    const uploadId = Date.now().toString();
+    
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * this.chunkSize;
+      const end = Math.min(start + this.chunkSize, file.size);
+      const chunk = file.slice(start, end);
+      
+      const formData = new FormData();
+      formData.append('chunk', chunk);
+      formData.append('chunkIndex', i);
+      formData.append('totalChunks', totalChunks);
+      formData.append('uploadId', uploadId);
+      formData.append('fileName', file.name);
+      
+      const response = await fetch(`${API_URL}/api/upload-chunk`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Chunk ${i} failed: ${response.statusText}`);
+      }
+      
+      if (onProgress) {
+        const progress = ((i + 1) / totalChunks) * 90;
+        onProgress(Math.round(progress));
+      }
+    }
+    
+    const finalResponse = await fetch(`${API_URL}/api/finalize-upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uploadId })
+    });
+    
+    if (!finalResponse.ok) {
+      throw new Error(`Finalization failed: ${finalResponse.statusText}`);
+    }
+    
+    if (onProgress) onProgress(100);
+    return finalResponse.json();
+  }
+}
 
 function App() {
   const [files, setFiles] = useState([]);
@@ -27,8 +110,8 @@ function App() {
   const [totalFiles, setTotalFiles] = useState(0);
   const [dragOver, setDragOver] = useState(false);
   
-  // Estados para o divisor de PDF (modificados para múltiplos arquivos)
-  const [activeTab, setActiveTab] = useState('extractor'); // 'extractor' ou 'splitter'
+  // Estados para o divisor de PDF
+  const [activeTab, setActiveTab] = useState('extractor');
   const [selectedFilesForSplit, setSelectedFilesForSplit] = useState([]);
   const [isSplitting, setIsSplitting] = useState(false);
   const [splitError, setSplitError] = useState(null);
@@ -36,13 +119,12 @@ function App() {
   const [splitFiles, setSplitFiles] = useState([]);
   const [dragOverSplitter, setDragOverSplitter] = useState(false);
   const [splittingProgress, setSplittingProgress] = useState({ current: 0, total: 0, fileName: '' });
-  
-  // NOVO: Estado para número de partes
-  const [splitParts, setSplitParts] = useState(2); // Padrão: 2 partes
+  const [splitParts, setSplitParts] = useState(2);
   
   const textAreaRef = useRef(null);
   const fileInputRef = useRef(null);
   const splitFileInputRef = useRef(null);
+  const uploaderRef = useRef(new ChunkedUploader());
 
   // Função para carregar PDF-lib dinamicamente
   const loadPDFLib = useCallback(async () => {
@@ -141,7 +223,7 @@ function App() {
     setSplitError(null);
     setSplitSuccess(null);
     setSplittingProgress({ current: 0, total: 0, fileName: '' });
-    setSplitParts(2); // Reset para valor padrão
+    setSplitParts(2);
     if (splitFileInputRef.current) {
       splitFileInputRef.current.value = '';
     }
@@ -177,7 +259,7 @@ function App() {
     setProcessingStage(null);
   }, []);
 
-  // Handlers para drag and drop do divisor (modificados para múltiplos arquivos)
+  // Handlers para drag and drop do divisor
   const handleSplitterDragOver = useCallback((e) => {
     e.preventDefault();
     setDragOverSplitter(true);
@@ -223,7 +305,6 @@ function App() {
     setError(null);
   }, []);
 
-  // Modificado para múltiplos arquivos
   const handleSplitFileChange = useCallback((e) => {
     const selectedFiles = Array.from(e.target.files);
     const pdfFiles = selectedFiles.filter(file => file.type === 'application/pdf');
@@ -265,50 +346,160 @@ function App() {
     }
   }, []);
 
-  // MODIFICADO: Função para dividir um único PDF com número configurável de partes
+  // Função para dividir um único PDF
   const splitSinglePDF = useCallback(async (file, PDFLib, parts) => {
     const arrayBuffer = await file.arrayBuffer();
-    const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+    
+    let pdfDoc = null;
+    let loadMethod = '';
+    
+    try {
+      pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+      loadMethod = 'normal';
+    } catch (firstError) {
+      console.log(`Erro ao carregar ${file.name} normalmente:`, firstError.message);
+      
+      if (firstError.message && firstError.message.includes('encrypted')) {
+        try {
+          console.log(`Tentando ignorar criptografia para ${file.name}...`);
+          pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { 
+            ignoreEncryption: true,
+            updateMetadata: false,
+            throwOnInvalidObject: false
+          });
+          loadMethod = 'ignoreEncryption';
+        } catch (secondError) {
+          console.log(`Falha ao ignorar criptografia para ${file.name}:`, secondError.message);
+          
+          try {
+            console.log(`Tentando senhas comuns para ${file.name}...`);
+            const commonPasswords = ['', '1234', 'admin', 'password', 'pdf', 'exame', 'laudo', 'laboratorio', '123456'];
+            
+            for (const password of commonPasswords) {
+              try {
+                pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { 
+                  password,
+                  updateMetadata: false,
+                  throwOnInvalidObject: false
+                });
+                loadMethod = `senha: "${password || 'vazia'}"`;
+                break;
+              } catch (passwordError) {
+                continue;
+              }
+            }
+            
+            if (!pdfDoc) {
+              throw new Error('Nenhuma senha comum funcionou');
+            }
+          } catch (thirdError) {
+            console.log(`Falha com senhas comuns para ${file.name}:`, thirdError.message);
+            
+            try {
+              console.log(`Tentando modo de recuperação para ${file.name}...`);
+              pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { 
+                ignoreEncryption: true,
+                throwOnInvalidObject: false,
+                updateMetadata: false,
+                parseSpeed: 150
+              });
+              loadMethod = 'recuperação';
+            } catch (fourthError) {
+              throw new Error(`PDF "${file.name}" está protegido e não pode ser dividido. Erro: ${firstError.message.includes('encrypted') ? 'Documento criptografado/protegido' : firstError.message}`);
+            }
+          }
+        }
+      } else {
+        throw new Error(`Erro ao processar "${file.name}": ${firstError.message}`);
+      }
+    }
+    
+    console.log(`PDF ${file.name} carregado com sucesso usando método: ${loadMethod}`);
     
     const totalPages = pdfDoc.getPageCount();
     
     if (totalPages < parts) {
-      throw new Error(`O PDF "${file.name}" deve ter pelo menos ${parts} páginas para ser dividido em ${parts} partes.`);
+      throw new Error(`O PDF "${file.name}" deve ter pelo menos ${parts} páginas para ser dividido em ${parts} partes. (Páginas encontradas: ${totalPages})`);
     }
 
     const pagesPerPart = Math.ceil(totalPages / parts);
     const resultFiles = [];
+    const errors = [];
 
     for (let i = 0; i < parts; i++) {
-      const newPdf = await PDFLib.PDFDocument.create();
-      const startPage = i * pagesPerPart;
-      const endPage = Math.min(startPage + pagesPerPart, totalPages);
-      
-      if (startPage < totalPages) {
-        const pageIndices = Array.from({ length: endPage - startPage }, (_, index) => startPage + index);
-        const copiedPages = await newPdf.copyPages(pdfDoc, pageIndices);
-        copiedPages.forEach(page => newPdf.addPage(page));
+      try {
+        const newPdf = await PDFLib.PDFDocument.create();
+        const startPage = i * pagesPerPart;
+        const endPage = Math.min(startPage + pagesPerPart, totalPages);
+        
+        if (startPage < totalPages) {
+          const pageIndices = Array.from({ length: endPage - startPage }, (_, index) => startPage + index);
+          
+          try {
+            const copiedPages = await newPdf.copyPages(pdfDoc, pageIndices);
+            copiedPages.forEach(page => newPdf.addPage(page));
+          } catch (copyError) {
+            console.warn(`Erro ao copiar páginas ${startPage + 1}-${endPage} de ${file.name}:`, copyError.message);
+            
+            for (let pageIndex of pageIndices) {
+              try {
+                const [copiedPage] = await newPdf.copyPages(pdfDoc, [pageIndex]);
+                newPdf.addPage(copiedPage);
+              } catch (singlePageError) {
+                console.warn(`Erro ao copiar página ${pageIndex + 1} de ${file.name}:`, singlePageError.message);
+                errors.push(`Página ${pageIndex + 1} não pôde ser copiada`);
+                
+                const blankPage = newPdf.addPage();
+                try {
+                  blankPage.drawText(`[Página ${pageIndex + 1} não pôde ser recuperada]`, {
+                    x: 50,
+                    y: blankPage.getHeight() / 2,
+                    size: 12
+                  });
+                } catch (textError) {
+                  // Página em branco como fallback
+                }
+              }
+            }
+          }
 
-        const pdfBytes = await newPdf.save();
-        const originalName = file.name.replace('.pdf', '');
-        const fileName = `${originalName}_parte${i + 1}de${parts}.pdf`;
+          const pdfBytes = await newPdf.save({
+            useObjectStreams: false
+          });
+          
+          const originalName = file.name.replace('.pdf', '');
+          const fileName = `${originalName}_parte${i + 1}de${parts}.pdf`;
 
-        resultFiles.push({
-          name: fileName,
-          bytes: pdfBytes,
-          pages: endPage - startPage,
-          blob: new Blob([pdfBytes], { type: 'application/pdf' }),
-          originalFile: file.name,
-          partNumber: i + 1,
-          totalParts: parts
-        });
+          resultFiles.push({
+            name: fileName,
+            bytes: pdfBytes,
+            pages: endPage - startPage,
+            blob: new Blob([pdfBytes], { type: 'application/pdf' }),
+            originalFile: file.name,
+            partNumber: i + 1,
+            totalParts: parts,
+            loadMethod: loadMethod,
+            warnings: errors.length > 0 ? errors : undefined
+          });
+        }
+      } catch (partError) {
+        console.error(`Erro ao criar parte ${i + 1} de ${file.name}:`, partError.message);
+        errors.push(`Parte ${i + 1}: ${partError.message}`);
       }
+    }
+
+    if (resultFiles.length === 0) {
+      throw new Error(`Não foi possível criar nenhuma parte do PDF "${file.name}". ${errors.length > 0 ? 'Erros: ' + errors.join(', ') : ''}`);
+    }
+
+    if (errors.length > 0) {
+      console.warn(`Divisão de ${file.name} completada com avisos:`, errors);
     }
 
     return resultFiles;
   }, []);
 
-  // MODIFICADO: Função principal para dividir PDFs (agora usa splitParts)
+  // Função principal para dividir PDFs
   const splitPDFs = useCallback(async () => {
     if (selectedFilesForSplit.length === 0) {
       setSplitError('Por favor, selecione pelo menos um arquivo PDF primeiro.');
@@ -325,6 +516,7 @@ function App() {
       const PDFLib = await loadPDFLib();
       const allSplitFiles = [];
       const errors = [];
+      const warnings = [];
 
       for (let i = 0; i < selectedFilesForSplit.length; i++) {
         const file = selectedFilesForSplit[i];
@@ -336,37 +528,90 @@ function App() {
 
         try {
           const splitResults = await splitSinglePDF(file, PDFLib, splitParts);
+          
+          const fileWarnings = [];
+          splitResults.forEach(result => {
+            if (result.warnings && result.warnings.length > 0) {
+              fileWarnings.push(...result.warnings);
+            }
+          });
+          
+          if (fileWarnings.length > 0) {
+            warnings.push({
+              fileName: file.name,
+              warnings: fileWarnings
+            });
+          }
+          
           allSplitFiles.push(...splitResults);
+          console.log(`✅ ${file.name} dividido com sucesso em ${splitResults.length} partes`);
+          
         } catch (error) {
-          console.error(`Erro ao dividir ${file.name}:`, error);
-          errors.push({ fileName: file.name, error: error.message });
+          console.error(`❌ Erro ao dividir ${file.name}:`, error);
+          
+          let errorMessage = error.message;
+          if (error.message.includes('criptografado') || error.message.includes('encrypted')) {
+            errorMessage = 'PDF protegido/criptografado - não pode ser dividido';
+          } else if (error.message.includes('páginas')) {
+            errorMessage = 'PDF tem poucas páginas para divisão selecionada';
+          } else if (error.message.includes('corrupted') || error.message.includes('invalid')) {
+            errorMessage = 'PDF corrompido ou formato inválido';
+          }
+          
+          errors.push({ 
+            fileName: file.name, 
+            error: errorMessage,
+            originalError: error.message
+          });
         }
       }
 
       setSplitFiles(allSplitFiles);
 
+      const successCount = selectedFilesForSplit.length - errors.length;
+      let successMessage = '';
+      let errorMessage = '';
+
       if (errors.length === 0) {
-        setSplitSuccess(
-          `Todos os ${selectedFilesForSplit.length} PDFs foram divididos em ${splitParts} partes com sucesso! ` +
-          `Total de ${allSplitFiles.length} arquivos gerados.`
-        );
+        successMessage = `🎉 Todos os ${selectedFilesForSplit.length} PDFs foram divididos em ${splitParts} partes com sucesso! Total de ${allSplitFiles.length} arquivos gerados.`;
+        
+        if (warnings.length > 0) {
+          successMessage += ` ⚠️ Alguns arquivos tiveram páginas problemáticas que foram substituídas por páginas em branco.`;
+        }
       } else if (allSplitFiles.length > 0) {
-        setSplitSuccess(
-          `${selectedFilesForSplit.length - errors.length} de ${selectedFilesForSplit.length} PDFs foram divididos com sucesso. ` +
-          `Total de ${allSplitFiles.length} arquivos gerados.`
-        );
-        setSplitError(
-          `Alguns arquivos não puderam ser processados:\n${errors.map(e => `• ${e.fileName}: ${e.error}`).join('\n')}`
-        );
+        successMessage = `✅ ${successCount} de ${selectedFilesForSplit.length} PDFs foram divididos com sucesso. Total de ${allSplitFiles.length} arquivos gerados.`;
+        
+        errorMessage = `❌ Arquivos que não puderam ser processados:\n${errors.map(e => `• ${e.fileName}: ${e.error}`).join('\n')}`;
+        
+        if (warnings.length > 0) {
+          errorMessage += `\n\n⚠️ Arquivos com avisos:\n${warnings.map(w => `• ${w.fileName}: ${w.warnings.join(', ')}`).join('\n')}`;
+        }
       } else {
-        setSplitError(
-          `Nenhum arquivo pôde ser processado:\n${errors.map(e => `• ${e.fileName}: ${e.error}`).join('\n')}`
-        );
+        errorMessage = `❌ Nenhum arquivo pôde ser processado:\n${errors.map(e => `• ${e.fileName}: ${e.error}`).join('\n')}`;
+        
+        const encryptedCount = errors.filter(e => e.error.includes('protegido') || e.error.includes('criptografado')).length;
+        const pageCount = errors.filter(e => e.error.includes('páginas')).length;
+        
+        if (encryptedCount > 0) {
+          errorMessage += `\n\n💡 Dica: ${encryptedCount} arquivo(s) estão protegidos. Tente:`;
+          errorMessage += `\n• Remover a proteção usando outro software`;
+          errorMessage += `\n• Imprimir para PDF para criar versão não protegida`;
+          errorMessage += `\n• Usar o extrator de resultados que pode processar PDFs protegidos`;
+        }
+        
+        if (pageCount > 0) {
+          errorMessage += `\n\n📄 Dica: ${pageCount} arquivo(s) têm poucas páginas. Tente:`;
+          errorMessage += `\n• Reduzir o número de partes para divisão`;
+          errorMessage += `\n• Verificar se o PDF tem o conteúdo esperado`;
+        }
       }
 
+      if (successMessage) setSplitSuccess(successMessage);
+      if (errorMessage) setSplitError(errorMessage);
+
     } catch (error) {
-      console.error('Erro ao carregar PDF-lib:', error);
-      setSplitError('Erro ao carregar a biblioteca de processamento de PDF. Tente recarregar a página.');
+      console.error('❌ Erro ao carregar PDF-lib:', error);
+      setSplitError('❌ Erro ao carregar a biblioteca de processamento de PDF. Tente recarregar a página.');
     } finally {
       setIsSplitting(false);
       setSplittingProgress({ current: 0, total: 0, fileName: '' });
@@ -392,7 +637,7 @@ function App() {
     });
   }, [splitFiles, downloadFile]);
 
-  // Função principal de upload e processamento (existente)
+  // Função principal de upload e processamento com chunked upload
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (files.length === 0) {
@@ -422,18 +667,18 @@ function App() {
       setCurrentProcessingFile(file.name);
       
       try {
-        const formData = new FormData();
-        formData.append('pdf', file);
+        const fileSizeMB = file.size / 1024 / 1024;
+        const isLargeFile = fileSizeMB > 4;
         
         setUploadStatus({ 
           stage: 'enviando', 
-          message: `Enviando ${fileNumber}/${files.length}: ${file.name.substring(0, 30)}${file.name.length > 30 ? '...' : ''}`,
+          message: `${isLargeFile ? 'Enviando em partes' : 'Enviando'} ${fileNumber}/${files.length}: ${file.name.substring(0, 30)}${file.name.length > 30 ? '...' : ''}`,
           timestamp: new Date().toLocaleTimeString()
         });
         
-        const response = await fetch(`${API_URL}/api/upload`, {
-          method: 'POST',
-          body: formData,
+        // Usar chunked uploader
+        const data = await uploaderRef.current.uploadFile(file, (progress) => {
+          console.log(`Progresso ${file.name}: ${progress}%`);
         });
         
         setProcessingStage('processing');
@@ -442,21 +687,6 @@ function App() {
           message: `Processando ${fileNumber}/${files.length}: Extraindo dados...`,
           timestamp: new Date().toLocaleTimeString()
         });
-        
-        if (!response.ok) {
-          let errorMessage = `Erro ${response.status}: ${response.statusText}`;
-          try {
-            const errorData = await response.json();
-            if (errorData.message) {
-              errorMessage = errorData.message;
-            }
-          } catch (jsonError) {
-
-          }
-          throw new Error(`Erro no arquivo ${file.name}: ${errorMessage}`);
-        }
-        
-        const data = await response.json();
         
         if (!data.summaries || data.summaries.length === 0) {
           throw new Error(`Não foi possível extrair informações do documento ${file.name}.`);
@@ -590,7 +820,6 @@ function App() {
     return formattedText;
   }, [summaries, patientName]);
 
-  // Função para copiar texto
   const copyToClipboard = useCallback(async () => {
     if (textAreaRef.current) {
       try {
@@ -643,7 +872,6 @@ function App() {
         <h1>Sistema de Processamento de Documentos</h1>
         <p className="subtitle">Extração de resultados e ferramentas para PDFs laboratoriais</p>
         
-        {/* Status da API */}
         {apiStatus && (
           <div className={`api-status ${apiStatus.status}`}>
             <span className="status-indicator"></span>
@@ -692,15 +920,15 @@ function App() {
         {/* Conteúdo da aba Extrator */}
         {activeTab === 'extractor' && (
           <>
-            {/* Aviso sobre limite de tamanho */}
+            {/* Aviso sobre chunked upload */}
             <div className="size-warning-card">
               <div className="warning-header">
-                <span className="warning-icon">⚠️</span>
-                <h3>Limite de Tamanho para Extração</h3>
+                <span className="warning-icon">✅</span>
+                <h3>Upload Inteligente Ativado</h3>
               </div>
               <div className="warning-content">
                 <p>
-                  <strong>PDFs com mais de 4MB precisam ser divididos antes da extração.</strong>
+                  <strong>Arquivos grandes (4MB) são automaticamente enviados em partes.</strong>
                 </p>
                 <p>
                   Use a aba <button 
@@ -708,7 +936,7 @@ function App() {
                     onClick={() => setActiveTab('splitter')}
                   >
                     ✂️ Divisor de PDF
-                  </button> para cortar arquivos grandes em partes menores.
+                  </button> se preferir dividir manualmente.
                 </p>
               </div>
             </div>
@@ -759,13 +987,13 @@ function App() {
                         const fileSizeMB = file.size / 1024 / 1024;
                         const isOverLimit = fileSizeMB > 4;
                         return (
-                          <li key={`${file.name}-${index}`} className={`file-item ${isOverLimit ? 'file-over-limit' : ''}`}>
+                          <li key={`${file.name}-${index}`} className={`file-item ${isOverLimit ? 'file-chunked' : ''}`}>
                             <span className="file-name">
                               <span className="pdf-icon">📄</span>
                               {file.name}
-                              <span className={`file-size ${isOverLimit ? 'size-warning' : ''}`}>
+                              <span className={`file-size ${isOverLimit ? 'size-chunked' : ''}`}>
                                 ({fileSizeMB.toFixed(1)} MB)
-                                {isOverLimit && <span className="size-alert">⚠️ Muito grande</span>}
+                                {isOverLimit && <span className="size-alert">📦 Envio em partes</span>}
                               </span>
                             </span>
                             <button 
@@ -781,18 +1009,12 @@ function App() {
                       })}
                     </ul>
                     {files.some(file => file.size / 1024 / 1024 > 4) && (
-                      <div className="file-size-alert">
-                        <span className="alert-icon">⚠️</span>
+                      <div className="file-size-alert chunked-info">
+                        <span className="alert-icon">📦</span>
                         <div className="alert-content">
-                          <strong>Arquivos muito grandes detectados!</strong>
-                          <p>PDFs com mais de 4MB podem falhar na extração. 
-                             <button 
-                               className="alert-link-button" 
-                               onClick={() => setActiveTab('splitter')}
-                             >
-                               Clique aqui para dividir os arquivos grandes
-                             </button> antes de extrair os resultados.
-                          </p>
+                          <strong>Arquivos grandes detectados!</strong>
+                          <p>PDFs maiores que 4MB serão enviados automaticamente em partes menores. 
+                             O processamento funcionará normalmente.</p>
                         </div>
                       </div>
                     )}
@@ -954,8 +1176,8 @@ function App() {
                 Divisor de PDF
               </h2>
               <p className="section-description">
-                <strong>Divida múltiplos PDFs grandes em partes menores para extração.</strong> 
-                Arquivos com mais de 4MB devem ser divididos antes de usar o extrator de resultados.
+                <strong>Divida múltiplos PDFs grandes em partes menores.</strong> 
+                Esta ferramenta é opcional - o extrator já lida automaticamente com arquivos grandes.
               </p>
               <div className="splitter-benefits">
                 <div className="benefit-item">
@@ -973,7 +1195,7 @@ function App() {
               </div>
             </div>
 
-            {/* NOVO: Seletor de número de partes */}
+            {/* Seletor de número de partes */}
             <div className="split-options-container">
               <h3 className="split-options-title">
                 <span className="options-icon">⚙️</span>
