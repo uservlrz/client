@@ -905,14 +905,14 @@ function App() {
             className={`tab-button ${activeTab === 'extractor' ? 'active' : ''}`}
             onClick={() => setActiveTab('extractor')}
           >
-            <span className="tab-icon">📋</span>
+            <span className="tab-icon"></span>
             Extrator de Resultados
           </button>
           <button 
             className={`tab-button ${activeTab === 'splitter' ? 'active' : ''}`}
             onClick={() => setActiveTab('splitter')}
           >
-            <span className="tab-icon">✂️</span>
+            <span className="tab-icon"></span>
             Divisor de PDF
           </button>
         </div>
@@ -920,26 +920,7 @@ function App() {
         {/* Conteúdo da aba Extrator */}
         {activeTab === 'extractor' && (
           <>
-            {/* Aviso sobre chunked upload */}
-            <div className="size-warning-card">
-              <div className="warning-header">
-                <span className="warning-icon">✅</span>
-                <h3>Upload Inteligente Ativado</h3>
-              </div>
-              <div className="warning-content">
-                <p>
-                  <strong>Arquivos grandes (4MB) são automaticamente enviados em partes.</strong>
-                </p>
-                <p>
-                  Use a aba <button 
-                    className="tab-link-button" 
-                    onClick={() => setActiveTab('splitter')}
-                  >
-                    ✂️ Divisor de PDF
-                  </button> se preferir dividir manualmente.
-                </p>
-              </div>
-            </div>
+            
 
             <div 
               className={`uploader-container ${dragOver ? 'drag-over' : ''}`}
@@ -1172,27 +1153,14 @@ function App() {
           <div className="pdf-splitter-section">
             <div className="splitter-intro">
               <h2>
-                <span className="section-icon">✂️</span>
+                <span className="section-icon"></span>
                 Divisor de PDF
               </h2>
               <p className="section-description">
                 <strong>Divida múltiplos PDFs grandes em partes menores.</strong> 
                 Esta ferramenta é opcional - o extrator já lida automaticamente com arquivos grandes.
               </p>
-              <div className="splitter-benefits">
-                <div className="benefit-item">
-                  <span className="benefit-icon">🎯</span>
-                  <span>Processe vários PDFs de uma só vez</span>
-                </div>
-                <div className="benefit-item">
-                  <span className="benefit-icon">🔒</span>
-                  <span>Processamento 100% local e seguro</span>
-                </div>
-                <div className="benefit-item">
-                  <span className="benefit-icon">⚡</span>
-                  <span>Divisão rápida e automática</span>
-                </div>
-              </div>
+              
             </div>
 
             {/* Seletor de número de partes */}
@@ -1218,7 +1186,7 @@ function App() {
                   ))}
                 </div>
                 <div className="parts-explanation">
-                  <span className="explanation-icon">ℹ️</span>
+                  <span className="explanation-icon"></span>
                   <span className="explanation-text">
                     {splitParts === 2 && "Divide cada PDF pela metade"}
                     {splitParts === 3 && "Divide cada PDF em 3 partes iguais"}
