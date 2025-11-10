@@ -85,10 +85,10 @@ export const Loader = ({ type = 'default', text = 'Carregando...' }) => {
 // Componente de toast para notificações
 export const Toast = ({ message, type = 'info', visible, onClose }) => {
   const icons = {
-    success: '✓',
-    error: '✗',
-    warning: '⚠️',
-    info: 'ℹ️'
+    success: 'OK',
+    error: 'X',
+    warning: '!',
+    info: 'i'
   };
 
   return (

@@ -17,7 +17,7 @@ const ErrorHandler = ({ error, onRetry }) => {
   return (
     <div className="error-container">
       <div className="error-icon">
-        {isPdfError ? '📄❌' : isServerError ? '🖥️❌' : '❌'}
+        {isPdfError ? 'PDF X' : isServerError ? 'SERVIDOR X' : 'X'}
       </div>
       
       <div className="error-content">

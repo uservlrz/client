@@ -1113,7 +1113,7 @@ input[type="file"] {
 }
 
 .selected-files-container h3::before {
-  content: "📁";
+  content: "";
   font-size: 14px;
 }
 

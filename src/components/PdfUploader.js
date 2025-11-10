@@ -183,9 +183,9 @@ const PdfUploader = ({ onSummariesUpdate, setLoading, setError, setPatientName }
       {uploadStatus && (
         <div className={`upload-status ${uploadStatus.stage}`}>
           <span className="status-icon">
-            {uploadStatus.stage === 'sucesso' ? '✓' : 
-             uploadStatus.stage === 'erro' ? '✗' : 
-             uploadStatus.stage === 'aviso' ? '⚠️' : '⟳'}
+            {uploadStatus.stage === 'sucesso' ? 'OK' :
+             uploadStatus.stage === 'erro' ? 'X' :
+             uploadStatus.stage === 'aviso' ? '!' : '...'}
           </span>
           <span className="status-message">{uploadStatus.message}</span>
         </div>

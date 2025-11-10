@@ -544,10 +544,10 @@ function App() {
           }
           
           allSplitFiles.push(...splitResults);
-          console.log(`✅ ${file.name} dividido com sucesso em ${splitResults.length} partes`);
+          console.log(`${file.name} dividido com sucesso em ${splitResults.length} partes`);
           
         } catch (error) {
-          console.error(`❌ Erro ao dividir ${file.name}:`, error);
+          console.error(`Erro ao dividir ${file.name}:`, error);
           
           let errorMessage = error.message;
           if (error.message.includes('criptografado') || error.message.includes('encrypted')) {
@@ -573,34 +573,34 @@ function App() {
       let errorMessage = '';
 
       if (errors.length === 0) {
-        successMessage = `🎉 Todos os ${selectedFilesForSplit.length} PDFs foram divididos em ${splitParts} partes com sucesso! Total de ${allSplitFiles.length} arquivos gerados.`;
-        
+        successMessage = `Todos os ${selectedFilesForSplit.length} PDFs foram divididos em ${splitParts} partes com sucesso! Total de ${allSplitFiles.length} arquivos gerados.`;
+
         if (warnings.length > 0) {
-          successMessage += ` ⚠️ Alguns arquivos tiveram páginas problemáticas que foram substituídas por páginas em branco.`;
+          successMessage += ` Alguns arquivos tiveram páginas problemáticas que foram substituídas por páginas em branco.`;
         }
       } else if (allSplitFiles.length > 0) {
-        successMessage = `✅ ${successCount} de ${selectedFilesForSplit.length} PDFs foram divididos com sucesso. Total de ${allSplitFiles.length} arquivos gerados.`;
-        
-        errorMessage = `❌ Arquivos que não puderam ser processados:\n${errors.map(e => `• ${e.fileName}: ${e.error}`).join('\n')}`;
-        
+        successMessage = `${successCount} de ${selectedFilesForSplit.length} PDFs foram divididos com sucesso. Total de ${allSplitFiles.length} arquivos gerados.`;
+
+        errorMessage = `Arquivos que não puderam ser processados:\n${errors.map(e => `• ${e.fileName}: ${e.error}`).join('\n')}`;
+
         if (warnings.length > 0) {
-          errorMessage += `\n\n⚠️ Arquivos com avisos:\n${warnings.map(w => `• ${w.fileName}: ${w.warnings.join(', ')}`).join('\n')}`;
+          errorMessage += `\n\nArquivos com avisos:\n${warnings.map(w => `• ${w.fileName}: ${w.warnings.join(', ')}`).join('\n')}`;
         }
       } else {
-        errorMessage = `❌ Nenhum arquivo pôde ser processado:\n${errors.map(e => `• ${e.fileName}: ${e.error}`).join('\n')}`;
-        
+        errorMessage = `Nenhum arquivo pôde ser processado:\n${errors.map(e => `• ${e.fileName}: ${e.error}`).join('\n')}`;
+
         const encryptedCount = errors.filter(e => e.error.includes('protegido') || e.error.includes('criptografado')).length;
         const pageCount = errors.filter(e => e.error.includes('páginas')).length;
-        
+
         if (encryptedCount > 0) {
-          errorMessage += `\n\n💡 Dica: ${encryptedCount} arquivo(s) estão protegidos. Tente:`;
+          errorMessage += `\n\nDica: ${encryptedCount} arquivo(s) estão protegidos. Tente:`;
           errorMessage += `\n• Remover a proteção usando outro software`;
           errorMessage += `\n• Imprimir para PDF para criar versão não protegida`;
           errorMessage += `\n• Usar o extrator de resultados que pode processar PDFs protegidos`;
         }
-        
+
         if (pageCount > 0) {
-          errorMessage += `\n\n📄 Dica: ${pageCount} arquivo(s) têm poucas páginas. Tente:`;
+          errorMessage += `\n\nDica: ${pageCount} arquivo(s) têm poucas páginas. Tente:`;
           errorMessage += `\n• Reduzir o número de partes para divisão`;
           errorMessage += `\n• Verificar se o PDF tem o conteúdo esperado`;
         }
@@ -610,8 +610,8 @@ function App() {
       if (errorMessage) setSplitError(errorMessage);
 
     } catch (error) {
-      console.error('❌ Erro ao carregar PDF-lib:', error);
-      setSplitError('❌ Erro ao carregar a biblioteca de processamento de PDF. Tente recarregar a página.');
+      console.error('Erro ao carregar PDF-lib:', error);
+      setSplitError('Erro ao carregar a biblioteca de processamento de PDF. Tente recarregar a página.');
     } finally {
       setIsSplitting(false);
       setSplittingProgress({ current: 0, total: 0, fileName: '' });
@@ -1038,9 +1038,9 @@ function App() {
               {uploadStatus && (
                 <div className={`upload-status ${uploadStatus.stage}`}>
                   <span className="status-icon">
-                    {uploadStatus.stage === 'sucesso' ? '✓' : 
-                    uploadStatus.stage === 'erro' ? '✗' : 
-                    uploadStatus.stage === 'aviso' ? '!' : '⟳'}
+                    {uploadStatus.stage === 'sucesso' ? 'OK' :
+                    uploadStatus.stage === 'erro' ? 'X' :
+                    uploadStatus.stage === 'aviso' ? '!' : '...'}
                   </span>
                   <div className="status-content">
                     <div className="status-message">{uploadStatus.message}</div>
@@ -1215,7 +1215,7 @@ function App() {
               <label htmlFor="pdf-split-upload" className={`splitter-file-label ${dragOverSplitter ? 'drag-active' : ''}`}>
                 <div className="splitter-upload-content">
                   <span className="splitter-upload-icon">
-                    {selectedFilesForSplit.length > 0 ? '✓' : '📎'}
+                    {selectedFilesForSplit.length > 0 ? 'OK' : '+'}
                   </span>
                   {selectedFilesForSplit.length > 0 ? (
                     <div className="selected-files-info">
@@ -1332,7 +1332,7 @@ function App() {
             {/* Mensagem de sucesso para divisor */}
             {splitSuccess && (
               <div className="split-success">
-                <span className="success-icon">✓</span>
+                <span className="success-icon">OK</span>
                 <span className="success-text">{splitSuccess}</span>
               </div>
             )}
@@ -1342,7 +1342,7 @@ function App() {
               <div className="split-results">
                 <div className="split-results-header">
                   <h3>
-                    <span className="results-icon">📁</span>
+                    <span className="results-icon"></span>
                     Arquivos Gerados ({splitFiles.length})
                   </h3>
                   <button
